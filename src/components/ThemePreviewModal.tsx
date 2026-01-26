@@ -1,4 +1,6 @@
-import { X, Star, ShoppingCart, ExternalLink, Check, Calendar, Tag } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { X, Star, ShoppingCart, ExternalLink, Check, Calendar, Tag, Monitor, Tablet, Smartphone, Maximize2, FileText, Headphones, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Theme } from "@/types/theme";
 import { useCart } from "@/contexts/CartContext";
@@ -16,12 +18,115 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
+type DeviceType = "desktop" | "tablet" | "mobile";
+
+const deviceSizes: Record<DeviceType, { width: string; height: string }> = {
+  desktop: { width: "100%", height: "100%" },
+  tablet: { width: "768px", height: "100%" },
+  mobile: { width: "375px", height: "100%" },
+};
+
 const ThemePreviewModal = ({ theme, isOpen, onClose }: ThemePreviewModalProps) => {
   const { addToCart, isInCart } = useCart();
+  const navigate = useNavigate();
+  const [showLivePreview, setShowLivePreview] = useState(false);
+  const [device, setDevice] = useState<DeviceType>("desktop");
 
   if (!isOpen || !theme) return null;
 
   const inCart = isInCart(theme.id);
+
+  const handleFullPreview = () => {
+    onClose();
+    navigate(`/preview/${theme.id}`);
+  };
+
+  if (showLivePreview && theme.demoUrl) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background">
+        {/* Preview Header */}
+        <div className="h-14 bg-card border-b border-border flex items-center justify-between px-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowLivePreview(false)}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-5 w-5" />
+              <span className="hidden sm:inline">Đóng Preview</span>
+            </button>
+            <div className="h-6 w-px bg-border" />
+            <span className="font-medium text-foreground">{theme.name}</span>
+          </div>
+
+          {/* Device Selector */}
+          <div className="flex items-center gap-2 bg-secondary rounded-lg p-1">
+            <button
+              onClick={() => setDevice("desktop")}
+              className={`p-2 rounded-md transition-colors ${device === "desktop" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              title="Desktop"
+            >
+              <Monitor className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setDevice("tablet")}
+              className={`p-2 rounded-md transition-colors ${device === "tablet" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              title="Tablet"
+            >
+              <Tablet className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setDevice("mobile")}
+              className={`p-2 rounded-md transition-colors ${device === "mobile" ? "bg-card text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+              title="Mobile"
+            >
+              <Smartphone className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleFullPreview}
+              className="gap-2"
+            >
+              <Maximize2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Toàn màn hình</span>
+            </Button>
+            <Button
+              variant={inCart ? "secondary" : "gradient"}
+              size="sm"
+              onClick={() => addToCart(theme)}
+              disabled={inCart}
+              className="gap-2"
+            >
+              {inCart ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
+              {inCart ? "Đã thêm" : "Mua ngay"}
+            </Button>
+          </div>
+        </div>
+
+        {/* Iframe Container */}
+        <div className="h-[calc(100vh-56px)] bg-muted flex items-start justify-center p-4 overflow-auto">
+          <div
+            className="bg-card rounded-lg shadow-xl overflow-hidden transition-all duration-300"
+            style={{
+              width: deviceSizes[device].width,
+              height: device === "desktop" ? "calc(100vh - 88px)" : "calc(100vh - 88px)",
+              maxWidth: "100%",
+            }}
+          >
+            <iframe
+              src={theme.demoUrl}
+              className="w-full h-full border-0"
+              title={`Preview ${theme.name}`}
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -50,6 +155,29 @@ const ThemePreviewModal = ({ theme, isOpen, onClose }: ThemePreviewModalProps) =
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/20 to-transparent" />
+            
+            {/* Preview buttons on image */}
+            {theme.demoUrl && (
+              <div className="absolute bottom-4 left-4 right-4 flex gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="flex-1 gap-2 bg-white/90 backdrop-blur-sm hover:bg-white"
+                  onClick={() => setShowLivePreview(true)}
+                >
+                  <Monitor className="h-4 w-4" />
+                  Xem trực tiếp
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="gap-2 bg-white/90 backdrop-blur-sm hover:bg-white"
+                  onClick={() => window.open(theme.demoUrl, "_blank")}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Content */}
@@ -80,6 +208,25 @@ const ThemePreviewModal = ({ theme, isOpen, onClose }: ThemePreviewModalProps) =
                     {formatPrice(theme.originalPrice)}
                   </span>
                 )}
+              </div>
+
+              {/* Support Info */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="text-center p-3 bg-secondary rounded-xl">
+                  <FileText className="h-5 w-5 mx-auto mb-1 text-primary" />
+                  <div className="text-xs text-muted-foreground">Tài liệu</div>
+                  <div className="text-sm font-medium text-foreground">Đầy đủ</div>
+                </div>
+                <div className="text-center p-3 bg-secondary rounded-xl">
+                  <RefreshCw className="h-5 w-5 mx-auto mb-1 text-primary" />
+                  <div className="text-xs text-muted-foreground">Cập nhật</div>
+                  <div className="text-sm font-medium text-foreground">Trọn đời</div>
+                </div>
+                <div className="text-center p-3 bg-secondary rounded-xl">
+                  <Headphones className="h-5 w-5 mx-auto mb-1 text-primary" />
+                  <div className="text-xs text-muted-foreground">Hỗ trợ</div>
+                  <div className="text-sm font-medium text-foreground">6 tháng</div>
+                </div>
               </div>
 
               {/* Meta info */}
@@ -161,10 +308,10 @@ const ThemePreviewModal = ({ theme, isOpen, onClose }: ThemePreviewModalProps) =
                     variant="hero-outline"
                     size="lg"
                     className="gap-2"
-                    onClick={() => window.open(theme.demoUrl, "_blank")}
+                    onClick={() => setShowLivePreview(true)}
                   >
-                    <ExternalLink className="h-5 w-5" />
-                    Demo
+                    <Monitor className="h-5 w-5" />
+                    Preview
                   </Button>
                 )}
               </div>

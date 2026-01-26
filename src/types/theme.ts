@@ -14,6 +14,14 @@ export interface Theme {
   lastUpdated: string;
   version: string;
   compatibility: string[];
+  // New fields
+  screenshots?: string[];
+  supportInfo?: {
+    documentation: boolean;
+    updates: string;
+    supportPeriod: string;
+  };
+  highlights?: string[];
 }
 
 export interface CartItem {

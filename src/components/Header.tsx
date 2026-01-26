@@ -1,9 +1,9 @@
-import { ShoppingCart, Search, Menu, X, Sun, Moon } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, Sun, Moon, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 interface HeaderProps {
   onCartClick: () => void;
@@ -17,8 +17,10 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
@@ -30,14 +32,22 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
     }
   }, [searchOpen]);
 
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setDropdownOpen(false);
+  }, [location.pathname]);
+
   const handleSearch = () => {
     if (onSearch) {
       onSearch(localSearchQuery);
     }
-    // Scroll to themes section
-    const themesSection = document.getElementById("themes-section");
-    if (themesSection) {
-      themesSection.scrollIntoView({ behavior: "smooth" });
+    if (location.pathname !== "/") {
+      navigate(`/?search=${encodeURIComponent(localSearchQuery)}`);
+    } else {
+      const themesSection = document.getElementById("themes-section");
+      if (themesSection) {
+        themesSection.scrollIntoView({ behavior: "smooth" });
+      }
     }
     setSearchOpen(false);
   };
@@ -50,6 +60,13 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
       setSearchOpen(false);
     }
   };
+
+  const navLinks = [
+    { to: "/", label: "Trang chủ" },
+    { to: "/about", label: "Giới thiệu" },
+    { to: "/support", label: "Hỗ trợ" },
+    { to: "/blog", label: "Blog" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
@@ -64,33 +81,73 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-              Trang chủ
-            </Link>
-            <a 
-              href="#themes-section" 
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/");
-                setTimeout(() => {
-                  document.getElementById("themes-section")?.scrollIntoView({ behavior: "smooth" });
-                }, 100);
-              }}
-            >
-              Themes
-            </a>
-            <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-              Danh mục
-            </Link>
-            <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-              Hỗ trợ
-            </Link>
+          <nav className="hidden md:flex items-center gap-6">
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`text-sm font-medium transition-colors ${
+                  location.pathname === link.to
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            
+            {/* Themes dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  navigate("/");
+                  setTimeout(() => {
+                    document.getElementById("themes-section")?.scrollIntoView({ behavior: "smooth" });
+                  }, 100);
+                }}
+                className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Themes
+              </button>
+            </div>
+
+            {/* Policy dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                onBlur={() => setTimeout(() => setDropdownOpen(false), 200)}
+                className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Chính sách
+                <ChevronDown className={`h-4 w-4 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+              {dropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-card rounded-xl shadow-lg border border-border py-2 animate-fade-in">
+                  <Link
+                    to="/policy"
+                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                  >
+                    Điều khoản sử dụng
+                  </Link>
+                  <Link
+                    to="/policy"
+                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                  >
+                    Chính sách bảo mật
+                  </Link>
+                  <Link
+                    to="/policy"
+                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                  >
+                    Chính sách hoàn tiền
+                  </Link>
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-2 md:gap-3">
             {/* Search Button & Expandable Input */}
             <div className="relative flex items-center">
               <div
@@ -175,7 +232,7 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
               )}
             </Button>
 
-            <Button variant="gradient" className="hidden md:flex">
+            <Button variant="gradient" size="sm" className="hidden md:flex">
               Đăng nhập
             </Button>
 
@@ -194,9 +251,9 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <nav className="md:hidden py-4 border-t border-border animate-fade-in">
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               {/* Mobile Search */}
-              <div className="relative">
+              <div className="relative mb-4">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
@@ -218,30 +275,28 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
                 )}
               </div>
               
-              <Link to="/" className="text-foreground hover:text-primary transition-colors py-2">
-                Trang chủ
-              </Link>
-              <a 
-                href="#themes-section"
-                className="text-foreground hover:text-primary transition-colors py-2"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setMobileMenuOpen(false);
-                  navigate("/");
-                  setTimeout(() => {
-                    document.getElementById("themes-section")?.scrollIntoView({ behavior: "smooth" });
-                  }, 100);
-                }}
+              {navLinks.map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className={`py-2 px-3 rounded-lg transition-colors ${
+                    location.pathname === link.to
+                      ? "bg-primary/10 text-primary"
+                      : "text-foreground hover:bg-secondary"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              
+              <Link
+                to="/policy"
+                className="py-2 px-3 rounded-lg text-foreground hover:bg-secondary"
               >
-                Themes
-              </a>
-              <Link to="/" className="text-foreground hover:text-primary transition-colors py-2">
-                Danh mục
+                Chính sách
               </Link>
-              <Link to="/" className="text-foreground hover:text-primary transition-colors py-2">
-                Hỗ trợ
-              </Link>
-              <Button variant="gradient" className="mt-2">
+
+              <Button variant="gradient" className="mt-4">
                 Đăng nhập
               </Button>
             </div>
