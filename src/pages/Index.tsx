@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import CategoryFilter from "@/components/CategoryFilter";
+import FilterBar from "@/components/FilterBar";
 import ThemeCard from "@/components/ThemeCard";
 import ThemePreviewModal from "@/components/ThemePreviewModal";
 import CartDrawer from "@/components/CartDrawer";
@@ -14,10 +14,14 @@ import { themes, categories } from "@/data/themes";
 import { Theme } from "@/types/theme";
 import { Sparkles, Zap, Shield, HeadphonesIcon } from "lucide-react";
 
+// Calculate max price from themes
+const maxPrice = Math.max(...themes.map((t) => t.price));
+
 const Index = () => {
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
   const [previewTheme, setPreviewTheme] = useState<Theme | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const themesSectionRef = useRef<HTMLElement>(null);
@@ -37,17 +41,20 @@ const Index = () => {
   const filteredThemes = useMemo(() => {
     return themes.filter((theme) => {
       const query = searchQuery.toLowerCase().trim();
-      const matchesSearch = query === "" ||
+      const matchesSearch =
+        query === "" ||
         theme.name.toLowerCase().includes(query) ||
         theme.description.toLowerCase().includes(query) ||
         theme.category.toLowerCase().includes(query) ||
-        theme.features.some(f => f.toLowerCase().includes(query)) ||
+        theme.features.some((f) => f.toLowerCase().includes(query)) ||
         theme.author.toLowerCase().includes(query);
       const matchesCategory =
         selectedCategory === "Tất cả" || theme.category === selectedCategory;
-      return matchesSearch && matchesCategory;
+      const matchesPrice =
+        theme.price >= priceRange[0] && theme.price <= priceRange[1];
+      return matchesSearch && matchesCategory && matchesPrice;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, priceRange]);
 
   const scrollToThemes = useCallback(() => {
     setTimeout(() => {
@@ -161,31 +168,18 @@ const Index = () => {
               </p>
             </AnimatedSection>
 
-            {/* Search Results Info */}
-            {searchQuery && (
-              <div className="mb-6 flex items-center justify-between flex-wrap gap-4 bg-secondary/50 rounded-xl p-4">
-                <p className="text-muted-foreground">
-                  Tìm thấy <span className="font-semibold text-foreground">{filteredThemes.length}</span> kết quả 
-                  cho "<span className="font-semibold text-primary">{searchQuery}</span>"
-                </p>
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSelectedCategory("Tất cả");
-                  }}
-                  className="text-sm text-primary hover:underline font-medium"
-                >
-                  ✕ Xóa tìm kiếm
-                </button>
-              </div>
-            )}
-
-            {/* Category Filter */}
+            {/* Enhanced Filter Bar */}
             <AnimatedSection animation="fade-up" delay={100} className="mb-10">
-              <CategoryFilter
+              <FilterBar
                 categories={categories}
                 selectedCategory={selectedCategory}
                 onCategoryChange={handleCategoryChange}
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+                priceRange={priceRange}
+                onPriceRangeChange={setPriceRange}
+                maxPrice={maxPrice}
+                themesCount={filteredThemes.length}
               />
             </AnimatedSection>
 
