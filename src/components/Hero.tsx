@@ -1,6 +1,6 @@
-import { Search } from "lucide-react";
+import { Search, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import heroMockup from "@/assets/hero-mockup.jpg";
+import WaveDivider from "@/components/WaveDivider";
 
 interface HeroProps {
   searchQuery: string;
@@ -9,76 +9,110 @@ interface HeroProps {
 
 const Hero = ({ searchQuery, onSearchChange }: HeroProps) => {
   return (
-    <section className="relative overflow-hidden py-20 lg:py-28">
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse-slow" />
+    <section className="relative overflow-hidden">
+      {/* Video Background */}
+      <div className="absolute inset-0 z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        >
+          <source
+            src="https://cdn.pixabay.com/video/2020/05/25/40130-424930970_large.mp4"
+            type="video/mp4"
+          />
+        </video>
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary/80 to-accent/70" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent/20 via-transparent to-transparent" />
+      </div>
+
+      {/* Animated particles */}
+      <div className="absolute inset-0 z-[1] overflow-hidden">
+        <div className="absolute top-20 left-[10%] w-3 h-3 bg-white/20 rounded-full animate-float" style={{ animationDelay: "0s" }} />
+        <div className="absolute top-40 left-[25%] w-2 h-2 bg-white/30 rounded-full animate-float" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-32 right-[20%] w-4 h-4 bg-white/15 rounded-full animate-float" style={{ animationDelay: "2s" }} />
+        <div className="absolute bottom-40 left-[15%] w-2 h-2 bg-white/25 rounded-full animate-float" style={{ animationDelay: "0.5s" }} />
+        <div className="absolute bottom-60 right-[30%] w-3 h-3 bg-white/20 rounded-full animate-float" style={{ animationDelay: "1.5s" }} />
+      </div>
       
-      <div className="container mx-auto px-4 relative">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left content */}
-          <div className="space-y-8 animate-fade-in">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm font-medium">
-              <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
-              Hơn 1000+ themes chất lượng cao
-            </div>
-            
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              Khám phá{" "}
-              <span className="gradient-text">WordPress Themes</span>{" "}
-              tốt nhất Việt Nam
-            </h1>
-            
-            <p className="text-lg text-muted-foreground max-w-lg">
-              Thư viện themes WordPress cao cấp với thiết kế hiện đại, tối ưu SEO và hỗ trợ kỹ thuật 24/7. Bắt đầu xây dựng website của bạn ngay hôm nay.
-            </p>
+      <div className="container mx-auto px-4 relative z-10 py-24 lg:py-32">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium border border-white/20 animate-fade-in">
+            <span className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+            Hơn 1000+ themes chất lượng cao
+          </div>
+          
+          {/* Heading */}
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold leading-tight text-white animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            Khám phá{" "}
+            <span className="relative inline-block">
+              <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-white via-accent-foreground to-accent">
+                WordPress Themes
+              </span>
+              <span className="absolute -bottom-2 left-0 w-full h-3 bg-accent/30 rounded-full blur-sm" />
+            </span>{" "}
+            <br className="hidden md:block" />
+            tốt nhất Việt Nam
+          </h1>
+          
+          {/* Description */}
+          <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            Thư viện themes WordPress cao cấp với thiết kế hiện đại, tối ưu SEO và hỗ trợ kỹ thuật 24/7. Bắt đầu xây dựng website của bạn ngay hôm nay.
+          </p>
 
-            {/* Search bar */}
-            <div className="flex gap-4 max-w-xl">
-              <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm themes..."
-                  value={searchQuery}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full h-14 pl-12 pr-4 bg-card border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                />
-              </div>
-              <Button variant="hero" size="xl">
-                Tìm kiếm
-              </Button>
+          {/* Search bar */}
+          <div className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.3s" }}>
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Tìm kiếm themes..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="w-full h-14 pl-12 pr-4 bg-white/95 backdrop-blur-sm border-0 rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-white/50 transition-all shadow-xl"
+              />
             </div>
-
-            {/* Stats */}
-            <div className="flex gap-8 pt-4">
-              <div>
-                <div className="text-2xl font-bold text-foreground">1000+</div>
-                <div className="text-sm text-muted-foreground">Themes</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-foreground">50K+</div>
-                <div className="text-sm text-muted-foreground">Khách hàng</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-foreground">4.9★</div>
-                <div className="text-sm text-muted-foreground">Đánh giá</div>
-              </div>
-            </div>
+            <Button variant="hero" size="xl" className="h-14 px-8 bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl shadow-accent/30">
+              Tìm kiếm
+            </Button>
           </div>
 
-          {/* Right content - Hero image */}
-          <div className="relative hidden lg:block animate-float">
-            <div className="absolute inset-0 gradient-bg rounded-3xl blur-2xl opacity-20 scale-95" />
-            <img
-              src={heroMockup}
-              alt="WordPress Theme Preview"
-              className="relative rounded-3xl card-shadow-hover border border-border/50"
-            />
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 animate-fade-in" style={{ animationDelay: "0.4s" }}>
+            <Button variant="outline" size="lg" className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm">
+              <Play className="mr-2 h-4 w-4" />
+              Xem video giới thiệu
+            </Button>
+          </div>
+
+          {/* Stats */}
+          <div className="flex flex-wrap justify-center gap-8 md:gap-16 pt-8 animate-fade-in" style={{ animationDelay: "0.5s" }}>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-white">1000+</div>
+              <div className="text-sm text-white/70">Premium Themes</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-white">50K+</div>
+              <div className="text-sm text-white/70">Khách hàng hài lòng</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-white">4.9★</div>
+              <div className="text-sm text-white/70">Đánh giá trung bình</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-white">24/7</div>
+              <div className="text-sm text-white/70">Hỗ trợ kỹ thuật</div>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Wave divider at bottom */}
+      <WaveDivider direction="down" className="absolute bottom-0 left-0 right-0 z-10" />
     </section>
   );
 };
