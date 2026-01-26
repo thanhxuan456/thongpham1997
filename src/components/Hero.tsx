@@ -2,14 +2,28 @@ import { Search, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WaveDivider from "@/components/WaveDivider";
 import { useParallax } from "@/hooks/use-parallax";
+import { FormEvent, useRef } from "react";
 
 interface HeroProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onSearch: () => void;
 }
 
-const Hero = ({ searchQuery, onSearchChange }: HeroProps) => {
+const Hero = ({ searchQuery, onSearchChange, onSearch }: HeroProps) => {
   const parallaxOffset = useParallax(0.4);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    onSearch();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      onSearch();
+    }
+  };
 
   return (
     <section className="relative overflow-hidden min-h-[90vh] flex items-center">
@@ -129,20 +143,57 @@ const Hero = ({ searchQuery, onSearchChange }: HeroProps) => {
           </p>
 
           {/* Search bar */}
-          <div className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.3s" }}>
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.3s" }}>
             <div className="flex-1 relative group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <input
+                ref={inputRef}
                 type="text"
-                placeholder="Tìm kiếm themes..."
+                placeholder="Tìm kiếm themes... (VD: Hotel, E-Commerce, Portfolio)"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="w-full h-14 pl-12 pr-4 bg-white/95 backdrop-blur-sm border-0 rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-white/50 transition-all shadow-xl"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSearchChange("");
+                    inputRef.current?.focus();
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  ✕
+                </button>
+              )}
             </div>
-            <Button variant="hero" size="xl" className="h-14 px-8 bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl shadow-accent/30">
+            <Button 
+              type="submit"
+              variant="hero" 
+              size="xl" 
+              className="h-14 px-8 bg-accent hover:bg-accent/90 text-accent-foreground shadow-xl shadow-accent/30"
+            >
+              <Search className="mr-2 h-5 w-5" />
               Tìm kiếm
             </Button>
+          </form>
+
+          {/* Quick search tags */}
+          <div className="flex flex-wrap justify-center gap-2 animate-fade-in" style={{ animationDelay: "0.35s" }}>
+            <span className="text-white/60 text-sm">Phổ biến:</span>
+            {["Hotel", "E-Commerce", "Portfolio", "Blog", "Restaurant"].map((tag) => (
+              <button
+                key={tag}
+                onClick={() => {
+                  onSearchChange(tag);
+                  onSearch();
+                }}
+                className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-full text-white/80 text-sm transition-colors border border-white/20"
+              >
+                {tag}
+              </button>
+            ))}
           </div>
 
           {/* CTA Buttons */}
