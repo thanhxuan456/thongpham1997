@@ -78,21 +78,15 @@ const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/" className="text-white/70 hover:text-white transition-colors flex items-center gap-2 group">
+                  <Link to="/about" className="text-white/70 hover:text-white transition-colors flex items-center gap-2 group">
                     <span className="w-1.5 h-1.5 bg-accent rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                    Tất cả Themes
+                    Giới thiệu
                   </Link>
                 </li>
                 <li>
-                  <Link to="/" className="text-white/70 hover:text-white transition-colors flex items-center gap-2 group">
+                  <Link to="/blog" className="text-white/70 hover:text-white transition-colors flex items-center gap-2 group">
                     <span className="w-1.5 h-1.5 bg-accent rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                    Danh mục
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/" className="text-white/70 hover:text-white transition-colors flex items-center gap-2 group">
-                    <span className="w-1.5 h-1.5 bg-accent rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                    Ưu đãi đặc biệt
+                    Blog
                   </Link>
                 </li>
               </ul>
@@ -103,27 +97,21 @@ const Footer = () => {
               <h3 className="font-semibold text-white mb-6 text-lg">Hỗ trợ</h3>
               <ul className="space-y-3">
                 <li>
-                  <Link to="/" className="text-white/70 hover:text-white transition-colors flex items-center gap-2 group">
+                  <Link to="/support" className="text-white/70 hover:text-white transition-colors flex items-center gap-2 group">
                     <span className="w-1.5 h-1.5 bg-accent rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                    Hướng dẫn cài đặt
+                    Trung tâm hỗ trợ
                   </Link>
                 </li>
                 <li>
-                  <Link to="/" className="text-white/70 hover:text-white transition-colors flex items-center gap-2 group">
+                  <Link to="/policy" className="text-white/70 hover:text-white transition-colors flex items-center gap-2 group">
                     <span className="w-1.5 h-1.5 bg-accent rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                    Câu hỏi thường gặp
+                    Chính sách hoàn tiền
                   </Link>
                 </li>
                 <li>
-                  <Link to="/" className="text-white/70 hover:text-white transition-colors flex items-center gap-2 group">
+                  <Link to="/policy" className="text-white/70 hover:text-white transition-colors flex items-center gap-2 group">
                     <span className="w-1.5 h-1.5 bg-accent rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                    Chính sách bảo hành
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/" className="text-white/70 hover:text-white transition-colors flex items-center gap-2 group">
-                    <span className="w-1.5 h-1.5 bg-accent rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                    Liên hệ hỗ trợ
+                    Điều khoản sử dụng
                   </Link>
                 </li>
               </ul>
