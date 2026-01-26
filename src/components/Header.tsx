@@ -1,6 +1,7 @@
-import { ShoppingCart, Search, Menu, X } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -10,6 +11,7 @@ interface HeaderProps {
 
 const Header = ({ onCartClick }: HeaderProps) => {
   const { getTotalItems } = useCart();
+  const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -41,9 +43,35 @@ const Header = ({ onCartClick }: HeaderProps) => {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <Button variant="ghost" size="icon" className="hidden md:flex">
               <Search className="h-5 w-5" />
+            </Button>
+
+            {/* Dark Mode Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="relative overflow-hidden"
+              aria-label="Toggle theme"
+            >
+              <div className="relative w-5 h-5">
+                <Sun 
+                  className={`h-5 w-5 absolute inset-0 transition-all duration-300 ${
+                    theme === "dark" 
+                      ? "rotate-90 scale-0 opacity-0" 
+                      : "rotate-0 scale-100 opacity-100"
+                  }`} 
+                />
+                <Moon 
+                  className={`h-5 w-5 absolute inset-0 transition-all duration-300 ${
+                    theme === "dark" 
+                      ? "rotate-0 scale-100 opacity-100" 
+                      : "-rotate-90 scale-0 opacity-0"
+                  }`} 
+                />
+              </div>
             </Button>
             
             <Button variant="ghost" size="icon" className="relative" onClick={onCartClick}>
