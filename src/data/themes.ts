@@ -5,6 +5,8 @@ import themeBlog from "@/assets/theme-blog.jpg";
 import themeCorporate from "@/assets/theme-corporate.jpg";
 import themeRestaurant from "@/assets/theme-restaurant.jpg";
 import themeLanding from "@/assets/theme-landing.jpg";
+import themeHotelSeaside from "@/assets/theme-hotel-seaside.jpg";
+import themeHotelAlpine from "@/assets/theme-hotel-alpine.jpg";
 
 export const themes: Theme[] = [
   {
@@ -109,6 +111,40 @@ export const themes: Theme[] = [
     version: "3.0.0",
     compatibility: ["WordPress 6.0+", "Elementor Pro", "PHP 8.0+"],
   },
+  {
+    id: "7",
+    name: "Aurelia Seaside",
+    description: "Theme resort biển sang trọng với đặt phòng online, gallery hình ảnh và quản lý dịch vụ spa. Thiết kế Mediterranean style.",
+    price: 1890000,
+    originalPrice: 2490000,
+    image: themeHotelSeaside,
+    category: "Hotel & Resort",
+    rating: 5.0,
+    sales: 876,
+    features: ["Booking system", "Room showcase", "Spa services", "Multi-language"],
+    demoUrl: "https://demo3.thongphamit.site",
+    author: "ThongPhamIT",
+    lastUpdated: "2024-01-25",
+    version: "2.0.0",
+    compatibility: ["WordPress 6.0+", "WooCommerce", "PHP 8.0+"],
+  },
+  {
+    id: "8",
+    name: "Grand Maison",
+    description: "Theme khách sạn 5 sao với hệ thống đặt phòng đầy đủ, quản lý phòng, suite và các tiện ích cao cấp. Tích hợp thanh toán online.",
+    price: 2190000,
+    originalPrice: 2890000,
+    image: themeHotelAlpine,
+    category: "Hotel & Resort",
+    rating: 4.9,
+    sales: 654,
+    features: ["Room booking", "Payment gateway", "Restaurant menu", "Spa & wellness"],
+    demoUrl: "https://demo4.thongphamit.site",
+    author: "ThongPhamIT",
+    lastUpdated: "2024-01-26",
+    version: "1.5.0",
+    compatibility: ["WordPress 6.0+", "WooCommerce", "Elementor Pro", "PHP 8.0+"],
+  },
 ];
 
 export const categories = [
@@ -119,4 +155,5 @@ export const categories = [
   "Business",
   "Restaurant",
   "Landing Page",
+  "Hotel & Resort",
 ];
