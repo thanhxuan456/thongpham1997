@@ -7,6 +7,7 @@ import ThemePreviewModal from "@/components/ThemePreviewModal";
 import CartDrawer from "@/components/CartDrawer";
 import Footer from "@/components/Footer";
 import AnimatedSection from "@/components/AnimatedSection";
+import CouponBanner from "@/components/CouponBanner";
 import { themes, categories } from "@/data/themes";
 import { Theme } from "@/types/theme";
 
@@ -15,6 +16,10 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [previewTheme, setPreviewTheme] = useState<Theme | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
+
+  // Coupon end date - 3 days from now
+  const couponEndDate = new Date();
+  couponEndDate.setDate(couponEndDate.getDate() + 3);
 
   const filteredThemes = useMemo(() => {
     return themes.filter((theme) => {
@@ -29,6 +34,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Top Coupon Banner */}
+      <CouponBanner
+        couponCode="THEMEVN25"
+        discountText="🔥 Ưu đãi đặc biệt: Giảm 25% cho tất cả themes!"
+        endDate={couponEndDate}
+      />
+
       <Header onCartClick={() => setCartOpen(true)} />
       
       <main>
