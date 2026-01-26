@@ -7,7 +7,7 @@ import themeRestaurant from "@/assets/theme-restaurant.jpg";
 import themeLanding from "@/assets/theme-landing.jpg";
 import themeHotelSeaside from "@/assets/theme-hotel-seaside.jpg";
 import themeHotelAlpine from "@/assets/theme-hotel-alpine.jpg";
-
+import themeHotelMajestic from "@/assets/theme-hotel-majestic.jpg";
 export const themes: Theme[] = [
   {
     id: "1",
@@ -144,6 +144,34 @@ export const themes: Theme[] = [
     lastUpdated: "2024-01-26",
     version: "1.5.0",
     compatibility: ["WordPress 6.0+", "WooCommerce", "Elementor Pro", "PHP 8.0+"],
+  },
+  {
+    id: "9",
+    name: "Majestic Hotel",
+    description: "Theme khách sạn 5-star sang trọng với hệ thống đặt phòng realtime, quản lý dịch vụ spa, nhà hàng và thanh toán online. Thiết kế gold & cream luxury.",
+    price: 2490000,
+    originalPrice: 3290000,
+    image: themeHotelMajestic,
+    category: "Hotel & Resort",
+    rating: 5.0,
+    sales: 1245,
+    features: ["Realtime booking", "Multi-room types", "Spa & Restaurant", "Payment gateway", "Dark/Light mode", "Multi-language"],
+    demoUrl: "https://tonyhotel.thongphamit.site/",
+    author: "ThongPhamIT",
+    lastUpdated: "2024-01-26",
+    version: "2.0.0",
+    compatibility: ["WordPress 6.0+", "WooCommerce", "Elementor Pro", "PHP 8.0+"],
+    highlights: [
+      "120+ Phòng sang trọng",
+      "Hệ thống đặt phòng realtime",
+      "Tích hợp thanh toán online",
+      "50K+ khách hàng hài lòng",
+    ],
+    supportInfo: {
+      documentation: true,
+      updates: "Lifetime",
+      supportPeriod: "6 tháng",
+    },
   },
 ];
 
