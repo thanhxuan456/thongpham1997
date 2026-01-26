@@ -6,6 +6,7 @@ import { useCart } from "@/contexts/CartContext";
 interface ThemeCardProps {
   theme: Theme;
   onPreview: (theme: Theme) => void;
+  searchQuery?: string;
 }
 
 const formatPrice = (price: number) => {
@@ -15,7 +16,31 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-const ThemeCard = ({ theme, onPreview }: ThemeCardProps) => {
+// Highlight matching text
+const HighlightText = ({ text, query }: { text: string; query?: string }) => {
+  if (!query || !query.trim()) {
+    return <>{text}</>;
+  }
+
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+
+  return (
+    <>
+      {parts.map((part, index) => 
+        regex.test(part) ? (
+          <mark key={index} className="bg-accent/30 text-foreground rounded px-0.5">
+            {part}
+          </mark>
+        ) : (
+          <span key={index}>{part}</span>
+        )
+      )}
+    </>
+  );
+};
+
+const ThemeCard = ({ theme, onPreview, searchQuery }: ThemeCardProps) => {
   const { addToCart, isInCart } = useCart();
   const inCart = isInCart(theme.id);
 
@@ -55,7 +80,7 @@ const ThemeCard = ({ theme, onPreview }: ThemeCardProps) => {
 
         {/* Category */}
         <div className="absolute top-3 right-3 bg-card/90 backdrop-blur-sm text-foreground text-xs font-medium px-3 py-1 rounded-full">
-          {theme.category}
+          <HighlightText text={theme.category} query={searchQuery} />
         </div>
       </div>
 
@@ -64,10 +89,10 @@ const ThemeCard = ({ theme, onPreview }: ThemeCardProps) => {
         {/* Header */}
         <div>
           <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1">
-            {theme.name}
+            <HighlightText text={theme.name} query={searchQuery} />
           </h3>
           <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-            {theme.description}
+            <HighlightText text={theme.description} query={searchQuery} />
           </p>
         </div>
 
@@ -78,7 +103,9 @@ const ThemeCard = ({ theme, onPreview }: ThemeCardProps) => {
             <span className="font-medium text-foreground">{theme.rating}</span>
             <span className="text-muted-foreground">({theme.sales} bán)</span>
           </div>
-          <span className="text-muted-foreground">{theme.author}</span>
+          <span className="text-muted-foreground">
+            <HighlightText text={theme.author} query={searchQuery} />
+          </span>
         </div>
 
         {/* Features */}
@@ -88,7 +115,7 @@ const ThemeCard = ({ theme, onPreview }: ThemeCardProps) => {
               key={feature}
               className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-md"
             >
-              {feature}
+              <HighlightText text={feature} query={searchQuery} />
             </span>
           ))}
         </div>

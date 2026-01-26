@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import CategoryFilter from "@/components/CategoryFilter";
@@ -16,6 +16,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [previewTheme, setPreviewTheme] = useState<Theme | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
+  const themesSectionRef = useRef<HTMLElement>(null);
 
   // Coupon end date - 3 days from now
   const couponEndDate = new Date();
@@ -23,14 +24,44 @@ const Index = () => {
 
   const filteredThemes = useMemo(() => {
     return themes.filter((theme) => {
-      const matchesSearch =
-        theme.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        theme.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const query = searchQuery.toLowerCase().trim();
+      const matchesSearch = query === "" ||
+        theme.name.toLowerCase().includes(query) ||
+        theme.description.toLowerCase().includes(query) ||
+        theme.category.toLowerCase().includes(query) ||
+        theme.features.some(f => f.toLowerCase().includes(query)) ||
+        theme.author.toLowerCase().includes(query);
       const matchesCategory =
         selectedCategory === "Tất cả" || theme.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
   }, [searchQuery, selectedCategory]);
+
+  const scrollToThemes = useCallback(() => {
+    setTimeout(() => {
+      themesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  }, []);
+
+  const handleSearch = useCallback(() => {
+    // Reset category when searching
+    if (searchQuery.trim()) {
+      setSelectedCategory("Tất cả");
+    }
+    scrollToThemes();
+  }, [searchQuery, scrollToThemes]);
+
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const handleCategoryChange = useCallback((category: string) => {
+    setSelectedCategory(category);
+    // Clear search when selecting category
+    if (category !== "Tất cả") {
+      setSearchQuery("");
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,14 +72,22 @@ const Index = () => {
         endDate={couponEndDate}
       />
 
-      <Header onCartClick={() => setCartOpen(true)} />
+      <Header 
+        onCartClick={() => setCartOpen(true)} 
+        onSearch={handleSearchChange}
+        searchQuery={searchQuery}
+      />
       
       <main>
         {/* Hero Section */}
-        <Hero searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <Hero 
+          searchQuery={searchQuery} 
+          onSearchChange={handleSearchChange}
+          onSearch={handleSearch}
+        />
 
         {/* Themes Section */}
-        <section className="py-16 pt-24">
+        <section id="themes-section" ref={themesSectionRef} className="py-16 pt-24 scroll-mt-20">
           <div className="container mx-auto px-4">
             {/* Section Header */}
             <AnimatedSection animation="fade-up" className="text-center mb-12">
@@ -60,12 +99,31 @@ const Index = () => {
               </p>
             </AnimatedSection>
 
+            {/* Search Results Info */}
+            {searchQuery && (
+              <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+                <p className="text-muted-foreground">
+                  Tìm thấy <span className="font-semibold text-foreground">{filteredThemes.length}</span> kết quả 
+                  cho "<span className="font-semibold text-primary">{searchQuery}</span>"
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory("Tất cả");
+                  }}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Xóa tìm kiếm
+                </button>
+              </div>
+            )}
+
             {/* Category Filter */}
             <AnimatedSection animation="fade-up" delay={100} className="mb-10">
               <CategoryFilter
                 categories={categories}
                 selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
+                onCategoryChange={handleCategoryChange}
               />
             </AnimatedSection>
 
@@ -76,20 +134,36 @@ const Index = () => {
                   <AnimatedSection
                     key={theme.id}
                     animation="fade-up"
-                    delay={index * 100}
+                    delay={Math.min(index * 100, 500)}
                   >
                     <ThemeCard
                       theme={theme}
                       onPreview={setPreviewTheme}
+                      searchQuery={searchQuery}
                     />
                   </AnimatedSection>
                 ))}
               </div>
             ) : (
               <div className="text-center py-20">
-                <p className="text-muted-foreground text-lg">
-                  Không tìm thấy theme nào phù hợp.
+                <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-4xl">🔍</span>
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  Không tìm thấy theme nào
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc
                 </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory("Tất cả");
+                  }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Xem tất cả themes
+                </button>
               </div>
             )}
           </div>
