@@ -1,4 +1,5 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import CategoryFilter from "@/components/CategoryFilter";
@@ -8,15 +9,26 @@ import CartDrawer from "@/components/CartDrawer";
 import Footer from "@/components/Footer";
 import AnimatedSection from "@/components/AnimatedSection";
 import CouponBanner from "@/components/CouponBanner";
+import FeaturedCarousel from "@/components/FeaturedCarousel";
 import { themes, categories } from "@/data/themes";
 import { Theme } from "@/types/theme";
+import { Sparkles, Zap, Shield, HeadphonesIcon } from "lucide-react";
 
 const Index = () => {
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Tất cả");
   const [previewTheme, setPreviewTheme] = useState<Theme | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const themesSectionRef = useRef<HTMLElement>(null);
+
+  // Handle URL params for category
+  useEffect(() => {
+    const category = searchParams.get("category");
+    if (category && categories.includes(category)) {
+      setSelectedCategory(category);
+    }
+  }, [searchParams]);
 
   // Coupon end date - 3 days from now
   const couponEndDate = new Date();
@@ -44,7 +56,6 @@ const Index = () => {
   }, []);
 
   const handleSearch = useCallback(() => {
-    // Reset category when searching
     if (searchQuery.trim()) {
       setSelectedCategory("Tất cả");
     }
@@ -57,11 +68,17 @@ const Index = () => {
 
   const handleCategoryChange = useCallback((category: string) => {
     setSelectedCategory(category);
-    // Clear search when selecting category
     if (category !== "Tất cả") {
       setSearchQuery("");
     }
   }, []);
+
+  const features = [
+    { icon: Sparkles, title: "Thiết kế chuyên nghiệp", desc: "Themes được thiết kế bởi đội ngũ chuyên gia với tiêu chuẩn cao nhất." },
+    { icon: Zap, title: "Tối ưu tốc độ", desc: "Themes được tối ưu hóa để đạt điểm PageSpeed cao nhất và SEO tốt nhất." },
+    { icon: Shield, title: "Bảo mật cao", desc: "Code sạch, tuân thủ chuẩn WordPress và được cập nhật thường xuyên." },
+    { icon: HeadphonesIcon, title: "Hỗ trợ 24/7", desc: "Đội ngũ hỗ trợ kỹ thuật luôn sẵn sàng giúp đỡ bạn bất cứ lúc nào." },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,11 +103,56 @@ const Index = () => {
           onSearch={handleSearch}
         />
 
+        {/* Featured Carousel */}
+        <FeaturedCarousel onPreview={setPreviewTheme} />
+
+        {/* Features Section */}
+        <section className="py-20 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-secondary/30 to-background" />
+          <div className="absolute top-20 left-[10%] w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-[10%] w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
+
+          <div className="container mx-auto px-4 relative z-10">
+            <AnimatedSection animation="fade-up" className="text-center mb-16">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full text-primary text-sm font-medium mb-4">
+                Tại sao chọn chúng tôi?
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                Trải nghiệm <span className="gradient-text">tốt nhất</span> cho bạn
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Chúng tôi cam kết mang đến những giá trị tốt nhất cho khách hàng
+              </p>
+            </AnimatedSection>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {features.map((feature, index) => (
+                <AnimatedSection key={feature.title} animation="fade-up" delay={index * 100}>
+                  <div className="bg-card p-6 rounded-2xl card-shadow text-center group hover:card-shadow-hover transition-all duration-300 hover:-translate-y-2 border border-border/50">
+                    <div className="w-14 h-14 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-primary/20">
+                      <feature.icon className="h-7 w-7 text-primary-foreground" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {feature.desc}
+                    </p>
+                  </div>
+                </AnimatedSection>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Themes Section */}
-        <section id="themes-section" ref={themesSectionRef} className="py-16 pt-24 scroll-mt-20">
+        <section id="themes-section" ref={themesSectionRef} className="py-16 scroll-mt-20">
           <div className="container mx-auto px-4">
             {/* Section Header */}
             <AnimatedSection animation="fade-up" className="text-center mb-12">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-accent/10 rounded-full text-accent text-sm font-medium mb-4">
+                🎨 Bộ sưu tập themes
+              </span>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
                 WordPress Themes <span className="gradient-text">nổi bật</span>
               </h2>
@@ -101,7 +163,7 @@ const Index = () => {
 
             {/* Search Results Info */}
             {searchQuery && (
-              <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
+              <div className="mb-6 flex items-center justify-between flex-wrap gap-4 bg-secondary/50 rounded-xl p-4">
                 <p className="text-muted-foreground">
                   Tìm thấy <span className="font-semibold text-foreground">{filteredThemes.length}</span> kết quả 
                   cho "<span className="font-semibold text-primary">{searchQuery}</span>"
@@ -111,9 +173,9 @@ const Index = () => {
                     setSearchQuery("");
                     setSelectedCategory("Tất cả");
                   }}
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm text-primary hover:underline font-medium"
                 >
-                  Xóa tìm kiếm
+                  ✕ Xóa tìm kiếm
                 </button>
               </div>
             )}
@@ -146,8 +208,8 @@ const Index = () => {
               </div>
             ) : (
               <div className="text-center py-20">
-                <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-4xl">🔍</span>
+                <div className="w-24 h-24 bg-secondary rounded-full flex items-center justify-center mx-auto mb-6">
+                  <span className="text-5xl">🔍</span>
                 </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">
                   Không tìm thấy theme nào
@@ -160,7 +222,7 @@ const Index = () => {
                     setSearchQuery("");
                     setSelectedCategory("Tất cả");
                   }}
-                  className="text-primary hover:underline font-medium"
+                  className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
                 >
                   Xem tất cả themes
                 </button>
@@ -169,74 +231,10 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Features Section */}
-        <section className="py-20 bg-gradient-to-b from-secondary/30 to-background relative overflow-hidden">
-          {/* Background decorations */}
-          <div className="absolute inset-0">
-            <div className="absolute top-20 left-[10%] w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-            <div className="absolute bottom-20 right-[10%] w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
-          </div>
-
-          <div className="container mx-auto px-4 relative z-10">
-            <AnimatedSection animation="fade-up" className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                Tại sao chọn <span className="gradient-text">ThemeVN?</span>
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Chúng tôi cam kết mang đến những giá trị tốt nhất cho khách hàng
-              </p>
-            </AnimatedSection>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <AnimatedSection animation="fade-up" delay={0}>
-                <div className="bg-card p-8 rounded-2xl card-shadow text-center group hover:card-shadow-hover transition-all duration-300 hover:-translate-y-1">
-                  <div className="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-3xl">🎨</span>
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-3">
-                    Thiết kế chuyên nghiệp
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Tất cả themes được thiết kế bởi đội ngũ chuyên gia với tiêu chuẩn cao nhất.
-                  </p>
-                </div>
-              </AnimatedSection>
-              
-              <AnimatedSection animation="fade-up" delay={150}>
-                <div className="bg-card p-8 rounded-2xl card-shadow text-center group hover:card-shadow-hover transition-all duration-300 hover:-translate-y-1">
-                  <div className="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-3xl">🚀</span>
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-3">
-                    Tối ưu tốc độ
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Themes được tối ưu hóa để đạt điểm PageSpeed cao nhất và SEO tốt nhất.
-                  </p>
-                </div>
-              </AnimatedSection>
-              
-              <AnimatedSection animation="fade-up" delay={300}>
-                <div className="bg-card p-8 rounded-2xl card-shadow text-center group hover:card-shadow-hover transition-all duration-300 hover:-translate-y-1">
-                  <div className="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-3xl">🛟</span>
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-3">
-                    Hỗ trợ 24/7
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Đội ngũ hỗ trợ kỹ thuật luôn sẵn sàng giúp đỡ bạn bất cứ lúc nào.
-                  </p>
-                </div>
-              </AnimatedSection>
-            </div>
-          </div>
-        </section>
-
         {/* Stats Section */}
         <section className="py-20">
           <div className="container mx-auto px-4">
-            <div className="bg-gradient-to-r from-primary via-primary to-accent rounded-3xl p-12 relative overflow-hidden">
+            <div className="bg-gradient-to-r from-primary via-primary to-accent rounded-3xl p-8 md:p-12 relative overflow-hidden">
               {/* Background pattern */}
               <div className="absolute inset-0 opacity-10">
                 <div className="absolute top-0 left-0 w-40 h-40 border border-white/20 rounded-full" />
@@ -249,25 +247,23 @@ const Index = () => {
                   <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                     Được tin dùng bởi hàng nghìn khách hàng
                   </h2>
+                  <p className="text-white/70 max-w-xl mx-auto">
+                    Hãy tham gia cùng cộng đồng những người đã thành công với ThemeVN
+                  </p>
                 </AnimatedSection>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                  <AnimatedSection animation="zoom" delay={0} className="text-center">
-                    <div className="text-4xl md:text-5xl font-bold text-white mb-2">1000+</div>
-                    <div className="text-white/70">Premium Themes</div>
-                  </AnimatedSection>
-                  <AnimatedSection animation="zoom" delay={100} className="text-center">
-                    <div className="text-4xl md:text-5xl font-bold text-white mb-2">50K+</div>
-                    <div className="text-white/70">Khách hàng</div>
-                  </AnimatedSection>
-                  <AnimatedSection animation="zoom" delay={200} className="text-center">
-                    <div className="text-4xl md:text-5xl font-bold text-white mb-2">99%</div>
-                    <div className="text-white/70">Hài lòng</div>
-                  </AnimatedSection>
-                  <AnimatedSection animation="zoom" delay={300} className="text-center">
-                    <div className="text-4xl md:text-5xl font-bold text-white mb-2">24/7</div>
-                    <div className="text-white/70">Hỗ trợ</div>
-                  </AnimatedSection>
+                  {[
+                    { value: "1000+", label: "Premium Themes" },
+                    { value: "50K+", label: "Khách hàng" },
+                    { value: "99%", label: "Hài lòng" },
+                    { value: "24/7", label: "Hỗ trợ" },
+                  ].map((stat, index) => (
+                    <AnimatedSection key={stat.label} animation="zoom" delay={index * 100} className="text-center">
+                      <div className="text-4xl md:text-5xl font-bold text-white mb-2">{stat.value}</div>
+                      <div className="text-white/70">{stat.label}</div>
+                    </AnimatedSection>
+                  ))}
                 </div>
               </div>
             </div>

@@ -1,9 +1,10 @@
-import { ShoppingCart, Search, Menu, X, Sun, Moon, ChevronDown } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, Sun, Moon, Home, Info, HeadphonesIcon, Newspaper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import MegaMenu from "./MegaMenu";
 
 interface HeaderProps {
   onCartClick: () => void;
@@ -17,7 +18,7 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,8 +35,15 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
 
   useEffect(() => {
     setMobileMenuOpen(false);
-    setDropdownOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSearch = () => {
     if (onSearch) {
@@ -62,92 +70,56 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
   };
 
   const navLinks = [
-    { to: "/", label: "Trang chủ" },
-    { to: "/about", label: "Giới thiệu" },
-    { to: "/support", label: "Hỗ trợ" },
-    { to: "/blog", label: "Blog" },
+    { to: "/", label: "Trang chủ", icon: Home },
+    { to: "/about", label: "Giới thiệu", icon: Info },
+    { to: "/support", label: "Hỗ trợ", icon: HeadphonesIcon },
+    { to: "/blog", label: "Blog", icon: Newspaper },
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b border-border">
+    <header 
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? "bg-card/95 backdrop-blur-xl shadow-lg border-b border-border" 
+          : "bg-card/80 backdrop-blur-lg border-b border-border/50"
+      }`}
+    >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
               <span className="text-primary-foreground font-bold text-lg">W</span>
             </div>
-            <span className="font-bold text-xl text-foreground">ThemeVN</span>
+            <div className="hidden sm:block">
+              <span className="font-bold text-xl text-foreground">ThemeVN</span>
+              <span className="text-xs text-muted-foreground block -mt-0.5">Premium Themes</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className={`text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all ${
                   location.pathname === link.to
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-primary bg-primary/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
               >
+                <link.icon className="h-4 w-4" />
                 {link.label}
               </Link>
             ))}
             
-            {/* Themes dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => {
-                  navigate("/");
-                  setTimeout(() => {
-                    document.getElementById("themes-section")?.scrollIntoView({ behavior: "smooth" });
-                  }, 100);
-                }}
-                className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Themes
-              </button>
-            </div>
-
-            {/* Policy dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                onBlur={() => setTimeout(() => setDropdownOpen(false), 200)}
-                className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Chính sách
-                <ChevronDown className={`h-4 w-4 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
-              </button>
-              {dropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-card rounded-xl shadow-lg border border-border py-2 animate-fade-in">
-                  <Link
-                    to="/policy"
-                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                  >
-                    Điều khoản sử dụng
-                  </Link>
-                  <Link
-                    to="/policy"
-                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                  >
-                    Chính sách bảo mật
-                  </Link>
-                  <Link
-                    to="/policy"
-                    className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                  >
-                    Chính sách hoàn tiền
-                  </Link>
-                </div>
-              )}
-            </div>
+            {/* Mega Menu */}
+            <MegaMenu />
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-2">
             {/* Search Button & Expandable Input */}
             <div className="relative flex items-center">
               <div
@@ -184,7 +156,7 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="hidden md:flex relative z-10"
+                className="hidden md:flex relative z-10 rounded-xl"
                 onClick={() => {
                   if (searchOpen && localSearchQuery) {
                     handleSearch();
@@ -202,7 +174,7 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              className="relative overflow-hidden"
+              className="relative overflow-hidden rounded-xl"
               aria-label="Toggle theme"
             >
               <div className="relative w-5 h-5">
@@ -223,16 +195,23 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
               </div>
             </Button>
             
-            <Button variant="ghost" size="icon" className="relative" onClick={onCartClick}>
+            {/* Cart */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="relative rounded-xl" 
+              onClick={onCartClick}
+            >
               <ShoppingCart className="h-5 w-5" />
               {getTotalItems() > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 gradient-accent-bg text-accent-foreground text-xs rounded-full flex items-center justify-center font-semibold">
+                <span className="absolute -top-1 -right-1 w-5 h-5 gradient-accent-bg text-accent-foreground text-xs rounded-full flex items-center justify-center font-bold animate-scale-in">
                   {getTotalItems()}
                 </span>
               )}
             </Button>
 
-            <Button variant="gradient" size="sm" className="hidden md:flex">
+            {/* Login Button */}
+            <Button variant="gradient" size="sm" className="hidden md:flex rounded-xl shadow-lg shadow-primary/20">
               Đăng nhập
             </Button>
 
@@ -240,7 +219,7 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
+              className="lg:hidden rounded-xl"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -250,7 +229,7 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <nav className="md:hidden py-4 border-t border-border animate-fade-in">
+          <nav className="lg:hidden py-4 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-2">
               {/* Mobile Search */}
               <div className="relative mb-4">
@@ -261,7 +240,7 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
                   value={localSearchQuery}
                   onChange={(e) => setLocalSearchQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="w-full h-10 pl-10 pr-4 bg-secondary border border-border rounded-lg text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full h-12 pl-10 pr-4 bg-secondary border border-border rounded-xl text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 {localSearchQuery && (
                   <Button
@@ -279,24 +258,41 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`py-2 px-3 rounded-lg transition-colors ${
+                  className={`flex items-center gap-3 py-3 px-4 rounded-xl transition-colors ${
                     location.pathname === link.to
                       ? "bg-primary/10 text-primary"
                       : "text-foreground hover:bg-secondary"
                   }`}
                 >
+                  <link.icon className="h-5 w-5" />
                   {link.label}
                 </Link>
               ))}
               
+              {/* Themes */}
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate("/");
+                  setTimeout(() => {
+                    document.getElementById("themes-section")?.scrollIntoView({ behavior: "smooth" });
+                  }, 100);
+                }}
+                className="flex items-center gap-3 py-3 px-4 rounded-xl text-foreground hover:bg-secondary text-left"
+              >
+                <span className="text-lg">🎨</span>
+                Xem tất cả Themes
+              </button>
+              
               <Link
                 to="/policy"
-                className="py-2 px-3 rounded-lg text-foreground hover:bg-secondary"
+                className="flex items-center gap-3 py-3 px-4 rounded-xl text-foreground hover:bg-secondary"
               >
+                <span className="text-lg">📋</span>
                 Chính sách
               </Link>
 
-              <Button variant="gradient" className="mt-4">
+              <Button variant="gradient" className="mt-4 h-12 rounded-xl">
                 Đăng nhập
               </Button>
             </div>
