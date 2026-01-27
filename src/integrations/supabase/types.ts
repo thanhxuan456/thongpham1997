@@ -52,6 +52,47 @@ export type Database = {
           },
         ]
       }
+      affiliate_referrals: {
+        Row: {
+          affiliate_user_id: string
+          commission_amount: number | null
+          created_at: string | null
+          id: string
+          order_id: string | null
+          paid_at: string | null
+          referred_user_id: string
+          status: string | null
+        }
+        Insert: {
+          affiliate_user_id: string
+          commission_amount?: number | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          paid_at?: string | null
+          referred_user_id: string
+          status?: string | null
+        }
+        Update: {
+          affiliate_user_id?: string
+          commission_amount?: number | null
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          paid_at?: string | null
+          referred_user_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_referrals_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_ratings: {
         Row: {
           created_at: string
@@ -355,36 +396,62 @@ export type Database = {
       }
       profiles: {
         Row: {
+          affiliate_code: string | null
+          affiliate_earnings: number | null
+          affiliate_enabled: boolean | null
+          affiliate_percentage: number | null
           avatar_url: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
           is_active: boolean
+          phone: string | null
+          referred_by: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          affiliate_code?: string | null
+          affiliate_earnings?: number | null
+          affiliate_enabled?: boolean | null
+          affiliate_percentage?: number | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
           is_active?: boolean
+          phone?: string | null
+          referred_by?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          affiliate_code?: string | null
+          affiliate_earnings?: number | null
+          affiliate_enabled?: boolean | null
+          affiliate_percentage?: number | null
           avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
           is_active?: boolean
+          phone?: string | null
+          referred_by?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       settings: {
         Row: {
