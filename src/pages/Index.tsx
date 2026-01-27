@@ -287,7 +287,7 @@ const Index = () => {
                   <img 
                     src={logo.src} 
                     alt={logo.alt}
-                    className="h-10 w-auto object-contain opacity-60 group-hover:opacity-100 transition-opacity duration-300 grayscale group-hover:grayscale-0"
+                    className="h-10 w-auto object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
                   />
                 </div>
               ))}
@@ -303,7 +303,7 @@ const Index = () => {
                   <img 
                     src={logo.src} 
                     alt={logo.alt}
-                    className="h-10 w-auto object-contain opacity-60 group-hover:opacity-100 transition-opacity duration-300 grayscale group-hover:grayscale-0"
+                    className="h-10 w-auto object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-300"
                   />
                 </div>
               ))}
