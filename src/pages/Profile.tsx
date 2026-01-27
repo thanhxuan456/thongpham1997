@@ -24,7 +24,11 @@ import {
   Calendar,
   Star,
   Heart,
-  Edit
+  Edit,
+  Camera,
+  X,
+  Save,
+  Phone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +37,15 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -74,6 +87,7 @@ interface UserProfile {
   full_name: string | null;
   avatar_url: string | null;
   email: string | null;
+  phone: string | null;
 }
 
 const Profile = () => {
@@ -84,6 +98,13 @@ const Profile = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: "",
+    phone: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -117,7 +138,7 @@ const Profile = () => {
         .order("created_at", { ascending: false }),
       supabase
         .from("profiles")
-        .select("full_name, avatar_url, email")
+        .select("full_name, avatar_url, email, phone")
         .eq("user_id", user!.id)
         .maybeSingle()
     ]);
@@ -125,9 +146,119 @@ const Profile = () => {
     if (downloadsRes.data) setDownloads(downloadsRes.data);
     if (sessionsRes.data) setSessions(sessionsRes.data);
     if (ordersRes.data) setOrders(ordersRes.data);
-    if (profileRes.data) setProfile(profileRes.data);
+    if (profileRes.data) {
+      setProfile(profileRes.data);
+      setEditForm({
+        full_name: profileRes.data.full_name || "",
+        phone: profileRes.data.phone || "",
+      });
+    }
     
     setLoading(false);
+  };
+
+  const handleOpenEditProfile = () => {
+    setEditForm({
+      full_name: profile?.full_name || "",
+      phone: profile?.phone || "",
+    });
+    setEditProfileOpen(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setSaving(true);
+    
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: editForm.full_name || null,
+          phone: editForm.phone || null,
+        })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Thành công",
+        description: "Thông tin cá nhân đã được cập nhật",
+      });
+      setEditProfileOpen(false);
+      fetchUserData();
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể cập nhật thông tin",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file
+    if (!file.type.startsWith("image/")) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Vui lòng chọn file ảnh",
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "File ảnh không được vượt quá 2MB",
+      });
+      return;
+    }
+
+    setAvatarUploading(true);
+
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("site-assets")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("site-assets")
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrl })
+        .eq("user_id", user.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Thành công",
+        description: "Đã cập nhật ảnh đại diện",
+      });
+      fetchUserData();
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể tải lên ảnh đại diện",
+      });
+    } finally {
+      setAvatarUploading(false);
+    }
   };
 
   const handleDownload = async (download: UserDownload) => {
@@ -270,19 +401,35 @@ const Profile = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="container mx-auto px-4 py-6 pt-20">
+      <main className="container mx-auto px-4 pt-4 pb-6">
         {/* Profile Header */}
         <AnimatedSection animation="fade-up">
           <Card className="mb-8 overflow-hidden">
             <div className="h-32 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20" />
             <CardContent className="relative pt-0">
               <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-16">
-                <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
-                  <AvatarImage src={profile?.avatar_url || undefined} />
-                  <AvatarFallback className="text-3xl bg-primary text-primary-foreground">
-                    {profile?.full_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+                                <div className="relative group">
+                                  <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
+                                    <AvatarImage src={profile?.avatar_url || undefined} />
+                                    <AvatarFallback className="text-3xl bg-primary text-primary-foreground">
+                                      {profile?.full_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                                    {avatarUploading ? (
+                                      <RefreshCw className="h-6 w-6 text-white animate-spin" />
+                                    ) : (
+                                      <Camera className="h-6 w-6 text-white" />
+                                    )}
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={handleAvatarUpload}
+                                      disabled={avatarUploading}
+                                    />
+                                  </label>
+                                </div>
                 <div className="flex-1 pb-4">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
@@ -297,16 +444,16 @@ const Profile = () => {
                         </Badge>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="gap-2">
-                        <Edit className="h-4 w-4" />
-                        Chỉnh sửa
-                      </Button>
-                      <Button variant="destructive" size="sm" onClick={() => signOut()} className="gap-2">
-                        <LogOut className="h-4 w-4" />
-                        Đăng xuất
-                      </Button>
-                    </div>
+                                    <div className="flex gap-2">
+                                      <Button variant="outline" size="sm" className="gap-2" onClick={handleOpenEditProfile}>
+                                        <Edit className="h-4 w-4" />
+                                        Chỉnh sửa
+                                      </Button>
+                                      <Button variant="destructive" size="sm" onClick={() => signOut()} className="gap-2">
+                                        <LogOut className="h-4 w-4" />
+                                        Đăng xuất
+                                      </Button>
+                                    </div>
                   </div>
                 </div>
               </div>
@@ -641,6 +788,61 @@ const Profile = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Chỉnh sửa hồ sơ</DialogTitle>
+            <DialogDescription>
+              Cập nhật thông tin cá nhân của bạn
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="full_name">Họ và tên</Label>
+              <Input
+                id="full_name"
+                value={editForm.full_name}
+                onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                placeholder="Nhập họ và tên"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Số điện thoại</Label>
+              <Input
+                id="phone"
+                value={editForm.phone}
+                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                placeholder="Nhập số điện thoại"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input value={user?.email || ""} disabled className="bg-muted" />
+              <p className="text-xs text-muted-foreground">Email không thể thay đổi</p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setEditProfileOpen(false)}>
+              Hủy
+            </Button>
+            <Button onClick={handleSaveProfile} disabled={saving}>
+              {saving ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Đang lưu...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Lưu thay đổi
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
