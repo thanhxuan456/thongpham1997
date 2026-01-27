@@ -88,6 +88,8 @@ const AdminSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
+  const [testingOtp, setTestingOtp] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
   
   // Local state for form values
   const [formValues, setFormValues] = useState<Record<string, string>>({});
@@ -616,6 +618,92 @@ const AdminSettings = () => {
                     <p className="text-xs text-muted-foreground">
                       Tên này sẽ hiển thị trong email: "ThemeVN &lt;noreply@vnthemes.store&gt;"
                     </p>
+                  </div>
+
+                  {/* Test OTP Email Button */}
+                  <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-4">
+                    <div className="flex items-start gap-3">
+                      <Mail className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                      <div className="space-y-3 flex-1">
+                        <p className="font-medium text-primary">
+                          Test gửi Email OTP
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Kiểm tra cấu hình email bằng cách gửi một OTP test đến email của bạn.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Input 
+                            type="email"
+                            value={testEmail}
+                            onChange={(e) => setTestEmail(e.target.value)}
+                            placeholder="your-email@example.com"
+                            className="flex-1"
+                          />
+                          <Button 
+                            onClick={async () => {
+                              if (!testEmail) {
+                                toast({
+                                  variant: "destructive",
+                                  title: "Lỗi",
+                                  description: "Vui lòng nhập email để test",
+                                });
+                                return;
+                              }
+                              
+                              if (!formValues['RESEND_API_KEY']) {
+                                toast({
+                                  variant: "destructive",
+                                  title: "Lỗi",
+                                  description: "Vui lòng cấu hình RESEND_API_KEY trước",
+                                });
+                                return;
+                              }
+
+                              setTestingOtp(true);
+                              try {
+                                const response = await supabase.functions.invoke('send-otp', {
+                                  body: { email: testEmail, type: 'login' }
+                                });
+                                
+                                if (response.error) {
+                                  throw response.error;
+                                }
+                                
+                                toast({
+                                  title: "Thành công!",
+                                  description: `OTP đã được gửi đến ${testEmail}. Kiểm tra hộp thư của bạn.`,
+                                });
+                              } catch (error: any) {
+                                toast({
+                                  variant: "destructive",
+                                  title: "Gửi OTP thất bại",
+                                  description: error.message || "Có lỗi xảy ra khi gửi OTP",
+                                });
+                              } finally {
+                                setTestingOtp(false);
+                              }
+                            }}
+                            disabled={testingOtp || !testEmail}
+                            className="gap-2"
+                          >
+                            {testingOtp ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Đang gửi...
+                              </>
+                            ) : (
+                              <>
+                                <Mail className="h-4 w-4" />
+                                Gửi OTP Test
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          <strong>Lưu ý:</strong> Nếu domain chưa xác minh, email chỉ gửi được đến tài khoản Resend đã verify.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
