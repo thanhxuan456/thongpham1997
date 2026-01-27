@@ -168,6 +168,17 @@ const ChatWidget = () => {
       ticket_id: ticket.id
     });
 
+    // Send SMS notification to admin
+    try {
+      await supabase.functions.invoke("send-sms-notification", {
+        body: {
+          message: `[ThemeVN] Ticket mới từ ${ticketForm.name || ticketForm.email}: ${ticketForm.subject}`
+        }
+      });
+    } catch (smsError) {
+      console.log("SMS notification skipped:", smsError);
+    }
+
     toast.success("Đã gửi yêu cầu hỗ trợ!");
     setTicketForm({ name: "", email: user?.email || "", phone: "", subject: "", message: "" });
     setCurrentTicket(ticket);
@@ -245,7 +256,7 @@ const ChatWidget = () => {
     <>
       {/* Rating popup */}
       {showRating && (
-        <div className="fixed bottom-20 right-6 z-50 animate-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-20 right-24 z-50 animate-in slide-in-from-bottom-4 duration-300">
           <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 w-64">
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-medium text-foreground text-sm">Đánh giá hỗ trợ</h4>

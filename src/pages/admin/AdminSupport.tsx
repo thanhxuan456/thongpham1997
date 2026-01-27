@@ -1,14 +1,19 @@
 import { useState, useEffect, useRef } from "react";
-import { MessageCircle, Send, Loader2, Bell, Check, CheckCheck, Phone, Mail, User, Search, Filter } from "lucide-react";
+import { MessageCircle, Send, Loader2, Bell, Check, CheckCheck, Phone, Mail, User, Search, Filter, Archive, Download, Trash2, MoreVertical, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { vi } from "date-fns/locale";
 
 interface Ticket {
   id: string;
@@ -43,6 +48,7 @@ interface Notification {
 const AdminSupport = () => {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [archivedTickets, setArchivedTickets] = useState<string[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -50,11 +56,15 @@ const AdminSupport = () => {
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("active");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchTickets();
     fetchNotifications();
+    loadArchivedTickets();
 
     // Subscribe to realtime
     const ticketChannel = supabase
@@ -103,6 +113,18 @@ const AdminSupport = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const loadArchivedTickets = () => {
+    const archived = localStorage.getItem("archivedTickets");
+    if (archived) {
+      setArchivedTickets(JSON.parse(archived));
+    }
+  };
+
+  const saveArchivedTickets = (archived: string[]) => {
+    localStorage.setItem("archivedTickets", JSON.stringify(archived));
+    setArchivedTickets(archived);
+  };
 
   const fetchTickets = async () => {
     const { data, error } = await supabase
@@ -200,7 +222,91 @@ const AdminSupport = () => {
     }
   };
 
-  const filteredTickets = tickets.filter(ticket => {
+  const archiveTicket = (ticketId: string) => {
+    const newArchived = [...archivedTickets, ticketId];
+    saveArchivedTickets(newArchived);
+    if (selectedTicket?.id === ticketId) {
+      setSelectedTicket(null);
+    }
+    toast.success("Đã lưu trữ ticket");
+  };
+
+  const unarchiveTicket = (ticketId: string) => {
+    const newArchived = archivedTickets.filter(id => id !== ticketId);
+    saveArchivedTickets(newArchived);
+    toast.success("Đã khôi phục ticket");
+  };
+
+  const downloadChatHistory = async (ticket: Ticket) => {
+    const { data: chatMessages } = await supabase
+      .from("ticket_messages")
+      .select("*")
+      .eq("ticket_id", ticket.id)
+      .order("created_at", { ascending: true });
+
+    if (!chatMessages || chatMessages.length === 0) {
+      toast.error("Không có tin nhắn để tải");
+      return;
+    }
+
+    const content = [
+      `===== LỊCH SỬ CHAT =====`,
+      `Ticket: ${ticket.subject}`,
+      `Khách hàng: ${ticket.user_name || ticket.user_email}`,
+      `Email: ${ticket.user_email}`,
+      `Điện thoại: ${ticket.user_phone || "N/A"}`,
+      `Trạng thái: ${ticket.status}`,
+      `Ngày tạo: ${format(new Date(ticket.created_at), "dd/MM/yyyy HH:mm", { locale: vi })}`,
+      ``,
+      `===== TIN NHẮN =====`,
+      ...chatMessages.map(msg => {
+        const sender = msg.sender_type === "admin" ? "Admin" : (ticket.user_name || "Khách");
+        const time = format(new Date(msg.created_at), "dd/MM/yyyy HH:mm:ss", { locale: vi });
+        return `[${time}] ${sender}: ${msg.message}`;
+      })
+    ].join("\n");
+
+    const blob = new Blob(["\uFEFF" + content], { type: "text/plain;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `chat_${ticket.id.slice(0, 8)}_${format(new Date(), "yyyyMMdd")}.txt`;
+    link.click();
+
+    toast.success("Đã tải lịch sử chat");
+  };
+
+  const deleteTicket = async (ticketId: string) => {
+    // First delete all messages
+    await supabase.from("ticket_messages").delete().eq("ticket_id", ticketId);
+    
+    // Delete notifications related to this ticket
+    await supabase.from("admin_notifications").delete().eq("ticket_id", ticketId);
+    
+    // Delete the ticket
+    const { error } = await supabase.from("support_tickets").delete().eq("id", ticketId);
+    
+    if (error) {
+      toast.error("Không thể xóa ticket");
+    } else {
+      // Remove from archived if exists
+      const newArchived = archivedTickets.filter(id => id !== ticketId);
+      saveArchivedTickets(newArchived);
+      
+      if (selectedTicket?.id === ticketId) {
+        setSelectedTicket(null);
+      }
+      fetchTickets();
+      toast.success("Đã xóa ticket");
+    }
+    
+    setDeleteDialogOpen(false);
+    setTicketToDelete(null);
+  };
+
+  const activeTickets = tickets.filter(t => !archivedTickets.includes(t.id));
+  const archivedTicketsList = tickets.filter(t => archivedTickets.includes(t.id));
+
+  const filteredTickets = (activeTab === "active" ? activeTickets : archivedTicketsList).filter(ticket => {
     const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
     const matchesSearch = 
       ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -221,6 +327,10 @@ const AdminSupport = () => {
             <p className="text-muted-foreground">Quản lý tickets và chat trực tiếp</p>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={fetchTickets} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Làm mới
+            </Button>
             <Badge variant={unreadNotifications > 0 ? "destructive" : "secondary"}>
               <Bell className="h-3 w-3 mr-1" />
               {unreadNotifications} thông báo mới
@@ -232,8 +342,27 @@ const AdminSupport = () => {
           {/* Tickets List */}
           <Card className="lg:col-span-1">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Danh sách Tickets</CardTitle>
-              <div className="flex gap-2 mt-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Danh sách Tickets</CardTitle>
+                <Badge variant="outline">
+                  {activeTab === "active" ? activeTickets.length : archivedTicketsList.length}
+                </Badge>
+              </div>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-2">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="active" className="gap-2">
+                    <MessageCircle className="h-4 w-4" />
+                    Đang hoạt động
+                  </TabsTrigger>
+                  <TabsTrigger value="archived" className="gap-2">
+                    <Archive className="h-4 w-4" />
+                    Lưu trữ
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+              
+              <div className="flex gap-2 mt-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -257,39 +386,85 @@ const AdminSupport = () => {
                 </Select>
               </div>
             </CardHeader>
-            <CardContent className="max-h-[600px] overflow-y-auto">
+            <CardContent className="max-h-[550px] overflow-y-auto">
               <div className="space-y-2">
-                {filteredTickets.map((ticket) => (
-                  <button
-                    key={ticket.id}
-                    onClick={() => setSelectedTicket(ticket)}
-                    className={`w-full p-3 rounded-lg text-left transition-colors ${
-                      selectedTicket?.id === ticket.id
-                        ? "bg-primary/10 border border-primary"
-                        : "bg-secondary/50 hover:bg-secondary border border-transparent"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground truncate">{ticket.subject}</p>
-                        <p className="text-sm text-muted-foreground truncate">{ticket.user_email}</p>
+                {filteredTickets.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>Không có ticket nào</p>
+                  </div>
+                ) : (
+                  filteredTickets.map((ticket) => (
+                    <div
+                      key={ticket.id}
+                      className={`p-3 rounded-lg transition-colors ${
+                        selectedTicket?.id === ticket.id
+                          ? "bg-primary/10 border border-primary"
+                          : "bg-secondary/50 hover:bg-secondary border border-transparent"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <button
+                          onClick={() => setSelectedTicket(ticket)}
+                          className="flex-1 text-left min-w-0"
+                        >
+                          <p className="font-medium text-foreground truncate">{ticket.subject}</p>
+                          <p className="text-sm text-muted-foreground truncate">{ticket.user_email}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {format(new Date(ticket.created_at), "dd/MM/yyyy HH:mm", { locale: vi })}
+                          </p>
+                        </button>
+                        <div className="flex items-center gap-2 ml-2">
+                          <Badge
+                            variant={
+                              ticket.status === "open" ? "default" :
+                              ticket.status === "pending" ? "secondary" : "outline"
+                            }
+                            className="shrink-0"
+                          >
+                            {ticket.status === "open" ? "Mới" :
+                             ticket.status === "pending" ? "Đang xử lý" : "Đã đóng"}
+                          </Badge>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="bg-popover border-border">
+                              <DropdownMenuItem onClick={() => downloadChatHistory(ticket)}>
+                                <Download className="h-4 w-4 mr-2" />
+                                Tải lịch sử chat
+                              </DropdownMenuItem>
+                              {activeTab === "active" ? (
+                                <DropdownMenuItem onClick={() => archiveTicket(ticket.id)}>
+                                  <Archive className="h-4 w-4 mr-2" />
+                                  Lưu trữ
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem onClick={() => unarchiveTicket(ticket.id)}>
+                                  <RefreshCw className="h-4 w-4 mr-2" />
+                                  Khôi phục
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                className="text-destructive"
+                                onClick={() => {
+                                  setTicketToDelete(ticket.id);
+                                  setDeleteDialogOpen(true);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Xóa vĩnh viễn
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
-                      <Badge
-                        variant={
-                          ticket.status === "open" ? "default" :
-                          ticket.status === "pending" ? "secondary" : "outline"
-                        }
-                        className="ml-2 shrink-0"
-                      >
-                        {ticket.status === "open" ? "Mới" :
-                         ticket.status === "pending" ? "Đang xử lý" : "Đã đóng"}
-                      </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(ticket.created_at).toLocaleDateString("vi-VN")}
-                    </p>
-                  </button>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -302,7 +477,7 @@ const AdminSupport = () => {
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="text-lg">{selectedTicket.subject}</CardTitle>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
                         <span className="flex items-center gap-1">
                           <User className="h-4 w-4" />
                           {selectedTicket.user_name || "Khách"}
@@ -319,16 +494,27 @@ const AdminSupport = () => {
                         )}
                       </div>
                     </div>
-                    <Select value={selectedTicket.status} onValueChange={updateTicketStatus}>
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="open">Mới</SelectItem>
-                        <SelectItem value="pending">Đang xử lý</SelectItem>
-                        <SelectItem value="closed">Đã đóng</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => downloadChatHistory(selectedTicket)}
+                        className="gap-2"
+                      >
+                        <Download className="h-4 w-4" />
+                        Tải
+                      </Button>
+                      <Select value={selectedTicket.status} onValueChange={updateTicketStatus}>
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="open">Mới</SelectItem>
+                          <SelectItem value="pending">Đang xử lý</SelectItem>
+                          <SelectItem value="closed">Đã đóng</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -351,10 +537,7 @@ const AdminSupport = () => {
                             msg.sender_type === "admin" ? "text-primary-foreground/70" : "text-muted-foreground"
                           }`}>
                             <span>
-                              {new Date(msg.created_at).toLocaleTimeString("vi-VN", {
-                                hour: "2-digit",
-                                minute: "2-digit"
-                              })}
+                              {format(new Date(msg.created_at), "HH:mm", { locale: vi })}
                             </span>
                             {msg.sender_type === "admin" && (
                               msg.is_read ? (
@@ -434,10 +617,7 @@ const AdminSupport = () => {
                       <p className="text-sm text-muted-foreground">{notif.message}</p>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(notif.created_at).toLocaleTimeString("vi-VN", {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      })}
+                      {format(new Date(notif.created_at), "HH:mm", { locale: vi })}
                     </span>
                   </div>
                 </div>
@@ -445,6 +625,29 @@ const AdminSupport = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Xác nhận xóa ticket</DialogTitle>
+              <DialogDescription>
+                Bạn có chắc muốn xóa ticket này? Tất cả tin nhắn và dữ liệu liên quan sẽ bị xóa vĩnh viễn.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                Hủy
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => ticketToDelete && deleteTicket(ticketToDelete)}
+              >
+                Xóa vĩnh viễn
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
