@@ -10,7 +10,6 @@ import Footer from "@/components/Footer";
 import AnimatedSection from "@/components/AnimatedSection";
 import CouponBanner from "@/components/CouponBanner";
 import FeaturedCarousel from "@/components/FeaturedCarousel";
-import StatsSection from "@/components/StatsSection";
 import { themes, categories } from "@/data/themes";
 import { Theme } from "@/types/theme";
 import { Sparkles, Zap, Shield, HeadphonesIcon } from "lucide-react";
@@ -227,7 +226,43 @@ const Index = () => {
         </section>
 
         {/* Stats Section */}
-        <StatsSection />
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <div className="bg-gradient-to-r from-primary via-primary to-accent rounded-3xl p-8 md:p-12 relative overflow-hidden">
+              {/* Background pattern */}
+              <div className="absolute inset-0 opacity-10">
+                <div className="absolute top-0 left-0 w-40 h-40 border border-white/20 rounded-full" />
+                <div className="absolute bottom-0 right-0 w-60 h-60 border border-white/20 rounded-full" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 border border-white/10 rounded-full" />
+              </div>
+
+              <div className="relative z-10">
+                <AnimatedSection animation="fade-up" className="text-center mb-12">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                    Được tin dùng bởi hàng nghìn khách hàng
+                  </h2>
+                  <p className="text-white/70 max-w-xl mx-auto">
+                    Hãy tham gia cùng cộng đồng những người đã thành công với ThemeVN
+                  </p>
+                </AnimatedSection>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                  {[
+                    { value: "1000+", label: "Premium Themes" },
+                    { value: "50K+", label: "Khách hàng" },
+                    { value: "99%", label: "Hài lòng" },
+                    { value: "24/7", label: "Hỗ trợ" },
+                  ].map((stat, index) => (
+                    <AnimatedSection key={stat.label} animation="zoom" delay={index * 100} className="text-center">
+                      <div className="text-4xl md:text-5xl font-bold text-white mb-2">{stat.value}</div>
+                      <div className="text-white/70">{stat.label}</div>
+                    </AnimatedSection>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       <Footer />
