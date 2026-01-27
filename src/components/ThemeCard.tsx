@@ -92,7 +92,7 @@ const ThemeCard = ({ theme, onPreview, searchQuery }: ThemeCardProps) => {
             variant="secondary"
             size="lg"
             onClick={() => onPreview(theme)}
-            className="gap-2 backdrop-blur-sm bg-white/90 hover:bg-white text-foreground shadow-xl"
+            className="gap-2 backdrop-blur-md bg-background/95 hover:bg-background text-foreground shadow-xl border border-border/50 dark:bg-background/90 dark:hover:bg-background dark:border-border"
           >
             <Eye className="h-4 w-4" />
             Xem trước

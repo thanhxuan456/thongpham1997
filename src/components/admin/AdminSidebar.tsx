@@ -10,7 +10,8 @@ import {
   Tag,
   Menu,
   Mail,
-  MessageCircle
+  MessageCircle,
+  UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +29,7 @@ const menuItems = [
   { icon: Tag, label: "Mã giảm giá", path: "/admin/coupons" },
   { icon: ShoppingCart, label: "Quản lý Đơn hàng", path: "/admin/orders" },
   { icon: MessageCircle, label: "Hỗ trợ khách hàng", path: "/admin/support" },
+  { icon: UserCheck, label: "Subscribers", path: "/admin/subscribers" },
   { icon: Menu, label: "Quản lý Menu", path: "/admin/menus" },
   { icon: Mail, label: "Email Templates", path: "/admin/emails" },
   { icon: Settings, label: "Cài đặt", path: "/admin/settings" },
