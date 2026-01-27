@@ -14,6 +14,16 @@ import { themes, categories } from "@/data/themes";
 import { Theme } from "@/types/theme";
 import { Sparkles, Zap, Shield, HeadphonesIcon } from "lucide-react";
 
+// Partner logo imports
+import logoStarter from "@/assets/partners/logo-starter.png";
+import logoCommerce from "@/assets/partners/logo-commerce.png";
+import logoBuilder from "@/assets/partners/logo-builder.png";
+import logoDevtools from "@/assets/partners/logo-devtools.png";
+import logoThemes from "@/assets/partners/logo-themes.png";
+import logoCreative from "@/assets/partners/logo-creative.png";
+import logoHosting from "@/assets/partners/logo-hosting.png";
+import logoPlugins from "@/assets/partners/logo-plugins.png";
+
 // Calculate max price from themes
 const maxPrice = Math.max(...themes.map((t) => t.price));
 
@@ -88,14 +98,26 @@ const Index = () => {
   ];
 
   // Partner logos for marquee
-  const partners = [
-    "Starter Theme", "WooCommerce", "Elementor", "Starter Theme", "AstraTheme", 
-    "Developer+", "ThemeForest", "CreativeMarket", "TemplateMonster", "Starter Theme"
+  const partnerLogos = [
+    { src: logoStarter, alt: "Starter" },
+    { src: logoCommerce, alt: "Commerce" },
+    { src: logoBuilder, alt: "Builder" },
+    { src: logoDevtools, alt: "DevTools" },
+    { src: logoThemes, alt: "Themes" },
+    { src: logoCreative, alt: "Creative" },
+    { src: logoHosting, alt: "Hosting" },
+    { src: logoPlugins, alt: "Plugins" },
   ];
   
-  const partners2 = [
-    "Developer Hub", "Developer+", "Developer Hub", "Developer+", "Developer Hub",
-    "Developer+", "Developer Hub", "Developer+", "Developer Hub", "Developer+"
+  const partnerLogos2 = [
+    { src: logoPlugins, alt: "Plugins" },
+    { src: logoHosting, alt: "Hosting" },
+    { src: logoCreative, alt: "Creative" },
+    { src: logoThemes, alt: "Themes" },
+    { src: logoDevtools, alt: "DevTools" },
+    { src: logoBuilder, alt: "Builder" },
+    { src: logoCommerce, alt: "Commerce" },
+    { src: logoStarter, alt: "Starter" },
   ];
 
   return (
@@ -256,29 +278,33 @@ const Index = () => {
             <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-secondary/30 to-transparent z-10 pointer-events-none" />
             
             {/* First row - scrolling left */}
-            <div className="flex gap-12 animate-marquee mb-8">
-              {[...partners, ...partners].map((partner, index) => (
+            <div className="flex gap-8 animate-marquee mb-6">
+              {[...partnerLogos, ...partnerLogos].map((logo, index) => (
                 <div
                   key={`row1-${index}`}
-                  className="flex-shrink-0 h-12 px-8 flex items-center justify-center bg-card rounded-xl border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg group"
+                  className="flex-shrink-0 h-16 w-32 flex items-center justify-center bg-card rounded-xl border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:scale-105 group"
                 >
-                  <span className="text-xl font-bold text-muted-foreground/60 group-hover:text-primary transition-colors duration-300 whitespace-nowrap">
-                    {partner}
-                  </span>
+                  <img 
+                    src={logo.src} 
+                    alt={logo.alt}
+                    className="h-10 w-auto object-contain opacity-60 group-hover:opacity-100 transition-opacity duration-300 grayscale group-hover:grayscale-0"
+                  />
                 </div>
               ))}
             </div>
 
             {/* Second row - scrolling right */}
-            <div className="flex gap-12 animate-marquee-reverse">
-              {[...partners2, ...partners2].map((partner, index) => (
+            <div className="flex gap-8 animate-marquee-reverse">
+              {[...partnerLogos2, ...partnerLogos2].map((logo, index) => (
                 <div
                   key={`row2-${index}`}
-                  className="flex-shrink-0 h-12 px-8 flex items-center justify-center bg-card rounded-xl border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg group"
+                  className="flex-shrink-0 h-16 w-32 flex items-center justify-center bg-card rounded-xl border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:scale-105 group"
                 >
-                  <span className="text-xl font-bold text-muted-foreground/60 group-hover:text-primary transition-colors duration-300 whitespace-nowrap">
-                    {partner}
-                  </span>
+                  <img 
+                    src={logo.src} 
+                    alt={logo.alt}
+                    className="h-10 w-auto object-contain opacity-60 group-hover:opacity-100 transition-opacity duration-300 grayscale group-hover:grayscale-0"
+                  />
                 </div>
               ))}
             </div>
