@@ -518,35 +518,91 @@ const AdminSettings = () => {
                     <Mail className="h-4 w-4" />
                     Email Service (Resend)
                   </h3>
-                  <div className="space-y-2">
-                    <Label>Resend API Key</Label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Input 
-                          type={showSecrets['RESEND_API_KEY'] ? 'text' : 'password'}
-                          value={formValues['RESEND_API_KEY'] || ''}
-                          onChange={(e) => updateFormValue('RESEND_API_KEY', e.target.value)}
-                          placeholder="re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                          className="pr-10"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-0 top-0 h-full"
-                          onClick={() => toggleSecretVisibility('RESEND_API_KEY')}
-                        >
-                          {showSecrets['RESEND_API_KEY'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  
+                  {/* API Key Status */}
+                  <div className="p-4 rounded-lg border border-border/50 bg-muted/30">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">Resend API Key</span>
+                          <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                            Đã cấu hình
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          API Key được quản lý bảo mật trong Lovable Cloud Secrets. 
+                          Để thay đổi API key, vui lòng liên hệ quản trị viên hệ thống.
+                        </p>
+                        <Button variant="outline" size="sm" className="mt-2" asChild>
+                          <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Quản lý API Keys tại Resend
+                          </a>
                         </Button>
                       </div>
-                      <Button variant="outline" asChild>
-                        <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </Button>
+                    </div>
+                  </div>
+
+                  {/* FROM Email Configuration */}
+                  <div className="space-y-2">
+                    <Label>Email gửi đi (From Email)</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        value={formValues['FROM_EMAIL'] || 'onboarding@resend.dev'}
+                        onChange={(e) => updateFormValue('FROM_EMAIL', e.target.value)}
+                        placeholder="noreply@yourdomain.com"
+                        className="flex-1"
+                      />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Lấy API key tại <a href="https://resend.com/api-keys" target="_blank" className="text-primary hover:underline">resend.com/api-keys</a>
+                      Email này sẽ hiển thị trong phần "From" khi gửi mail. 
+                      <strong className="text-yellow-600"> Lưu ý:</strong> Domain phải được xác minh tại Resend.
+                    </p>
+                  </div>
+
+                  {/* Domain Verification Guide */}
+                  <div className="p-4 rounded-lg border border-yellow-500/30 bg-yellow-500/5">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-yellow-500 shrink-0 mt-0.5" />
+                      <div className="space-y-2">
+                        <p className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Xác minh Domain để gửi email sản xuất
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Domain <strong>vnthemes.store</strong> cần được xác minh tại Resend để gửi email đến tất cả người dùng. 
+                          Nếu chưa xác minh, email chỉ gửi được đến tài khoản test.
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <a href="https://resend.com/domains" target="_blank" rel="noopener noreferrer">
+                              <Globe className="h-4 w-4 mr-2" />
+                              Xác minh Domain
+                            </a>
+                          </Button>
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href="https://resend.com/docs/knowledge-base/what-is-domain-verification" target="_blank" rel="noopener noreferrer">
+                              <FileText className="h-4 w-4 mr-2" />
+                              Hướng dẫn
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Store Name for Email */}
+                  <div className="space-y-2">
+                    <Label>Tên hiển thị trong Email</Label>
+                    <Input 
+                      value={formValues['STORE_NAME'] || 'ThemeVN'}
+                      onChange={(e) => updateFormValue('STORE_NAME', e.target.value)}
+                      placeholder="ThemeVN"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Tên này sẽ hiển thị trong email: "ThemeVN &lt;noreply@vnthemes.store&gt;"
                     </p>
                   </div>
                 </div>
