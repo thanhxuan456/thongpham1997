@@ -699,10 +699,74 @@ const AdminSettings = () => {
                             )}
                           </Button>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Rate Limiting Settings */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Rate Limiting (Chống Spam OTP)
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Cấu hình giới hạn số lần gửi OTP để ngăn chặn spam và bảo vệ hệ thống.
+                    </p>
+                    
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <div className="space-y-2">
+                        <Label>Thời gian giữa các lần gửi (giây)</Label>
+                        <Input 
+                          type="number"
+                          min="10"
+                          max="300"
+                          value={formValues['OTP_RATE_LIMIT_WINDOW'] || '60'}
+                          onChange={(e) => updateFormValue('OTP_RATE_LIMIT_WINDOW', e.target.value)}
+                          placeholder="60"
+                        />
                         <p className="text-xs text-muted-foreground">
-                          <strong>Lưu ý:</strong> Nếu domain chưa xác minh, email chỉ gửi được đến tài khoản Resend đã verify.
+                          Khoảng thời gian để đếm số lần gửi
                         </p>
                       </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Số lần gửi tối đa</Label>
+                        <Input 
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={formValues['OTP_RATE_LIMIT_MAX_ATTEMPTS'] || '3'}
+                          onChange={(e) => updateFormValue('OTP_RATE_LIMIT_MAX_ATTEMPTS', e.target.value)}
+                          placeholder="3"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Số OTP tối đa trong khoảng thời gian
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label>Thời gian khóa (giây)</Label>
+                        <Input 
+                          type="number"
+                          min="60"
+                          max="3600"
+                          value={formValues['OTP_RATE_LIMIT_BLOCK_DURATION'] || '300'}
+                          onChange={(e) => updateFormValue('OTP_RATE_LIMIT_BLOCK_DURATION', e.target.value)}
+                          placeholder="300"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Thời gian khóa khi vượt quá giới hạn
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-lg border border-primary/30 bg-primary/5">
+                      <p className="text-sm text-primary">
+                        <strong>Cấu hình hiện tại:</strong> Mỗi email chỉ được gửi tối đa {formValues['OTP_RATE_LIMIT_MAX_ATTEMPTS'] || '3'} OTP 
+                        trong {formValues['OTP_RATE_LIMIT_WINDOW'] || '60'} giây. Nếu vượt quá sẽ bị khóa {Math.ceil(parseInt(formValues['OTP_RATE_LIMIT_BLOCK_DURATION'] || '300') / 60)} phút.
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -32,11 +32,18 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch settings including RESEND_API_KEY from database
+    // Fetch settings including RESEND_API_KEY and rate limiting from database
     const { data: settings, error: settingsError } = await supabase
       .from("settings")
       .select("key, value")
-      .in("key", ["STORE_NAME", "FROM_EMAIL", "RESEND_API_KEY"]);
+      .in("key", [
+        "STORE_NAME", 
+        "FROM_EMAIL", 
+        "RESEND_API_KEY",
+        "OTP_RATE_LIMIT_WINDOW",
+        "OTP_RATE_LIMIT_MAX_ATTEMPTS",
+        "OTP_RATE_LIMIT_BLOCK_DURATION"
+      ]);
 
     if (settingsError) {
       console.error("Error fetching settings:", settingsError);
@@ -54,16 +61,75 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Email service is not configured. Please add RESEND_API_KEY in Admin Settings.");
     }
 
+    // Rate limiting configuration
+    const rateLimitWindow = parseInt(settingsMap.OTP_RATE_LIMIT_WINDOW || "60", 10);
+    const maxAttempts = parseInt(settingsMap.OTP_RATE_LIMIT_MAX_ATTEMPTS || "3", 10);
+    const blockDuration = parseInt(settingsMap.OTP_RATE_LIMIT_BLOCK_DURATION || "300", 10);
+
+    // Check rate limiting - count recent OTP requests for this email
+    const windowStart = new Date(Date.now() - rateLimitWindow * 1000).toISOString();
+    const blockStart = new Date(Date.now() - blockDuration * 1000).toISOString();
+
+    // Check if user is blocked (exceeded max attempts in block duration)
+    const { count: blockedCount, error: blockedError } = await supabase
+      .from("otp_codes")
+      .select("*", { count: "exact", head: true })
+      .eq("email", email)
+      .gte("created_at", blockStart);
+
+    if (blockedError) {
+      console.error("Error checking blocked status:", blockedError);
+    }
+
+    // If user has exceeded attempts in the block duration, block them
+    if (blockedCount && blockedCount >= maxAttempts * 2) {
+      const remainingBlockTime = Math.ceil(blockDuration / 60);
+      throw new Error(`Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau ${remainingBlockTime} phút.`);
+    }
+
+    // Check rate limiting in current window
+    const { count: recentCount, error: countError } = await supabase
+      .from("otp_codes")
+      .select("*", { count: "exact", head: true })
+      .eq("email", email)
+      .gte("created_at", windowStart);
+
+    if (countError) {
+      console.error("Error checking rate limit:", countError);
+    }
+
+    if (recentCount && recentCount >= maxAttempts) {
+      throw new Error(`Bạn chỉ có thể gửi tối đa ${maxAttempts} OTP trong ${rateLimitWindow} giây. Vui lòng thử lại sau.`);
+    }
+
+    // Check last OTP time for this email
+    const { data: lastOtp, error: lastOtpError } = await supabase
+      .from("otp_codes")
+      .select("created_at")
+      .eq("email", email)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (lastOtpError) {
+      console.error("Error checking last OTP:", lastOtpError);
+    }
+
+    if (lastOtp) {
+      const lastOtpTime = new Date(lastOtp.created_at).getTime();
+      const timeSinceLastOtp = Date.now() - lastOtpTime;
+      const minWaitTime = Math.floor(rateLimitWindow / maxAttempts) * 1000; // Minimum wait time between OTPs
+      
+      if (timeSinceLastOtp < minWaitTime) {
+        const remainingSeconds = Math.ceil((minWaitTime - timeSinceLastOtp) / 1000);
+        throw new Error(`Vui lòng đợi ${remainingSeconds} giây trước khi gửi OTP tiếp theo.`);
+      }
+    }
+
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Delete any existing OTP for this email
-    await supabase
-      .from("otp_codes")
-      .delete()
-      .eq("email", email);
-
-    // Insert new OTP
+    // Insert new OTP (don't delete old ones - we need them for rate limiting)
     const { error: insertError } = await supabase
       .from("otp_codes")
       .insert({
@@ -77,6 +143,14 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Error storing OTP:", insertError);
       throw new Error("Failed to generate OTP");
     }
+
+    // Mark old OTPs as used (so they can't be reused)
+    await supabase
+      .from("otp_codes")
+      .update({ used: true })
+      .eq("email", email)
+      .neq("code", otp)
+      .eq("used", false);
 
     const storeName = settingsMap.STORE_NAME || "ThemeVN";
     // Use Resend test domain if no custom domain is configured
