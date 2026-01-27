@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Checkout from "./pages/Checkout";
 import ThemePreview from "./pages/ThemePreview";
@@ -12,6 +13,8 @@ import About from "./pages/About";
 import Support from "./pages/Support";
 import Blog from "./pages/Blog";
 import Policy from "./pages/Policy";
+import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,23 +23,27 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <TooltipProvider>
-        <CartProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/preview/:id" element={<ThemePreview />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/support" element={<Support />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/policy" element={<Policy />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/preview/:id" element={<ThemePreview />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/policy" element={<Policy />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </CartProvider>
+        </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

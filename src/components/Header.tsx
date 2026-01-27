@@ -1,10 +1,18 @@
-import { ShoppingCart, Search, Menu, X, Sun, Moon, Home, Info, HeadphonesIcon, Newspaper } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, Sun, Moon, Home, Info, HeadphonesIcon, Newspaper, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import MegaMenu from "./MegaMenu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
   onCartClick: () => void;
@@ -15,6 +23,7 @@ interface HeaderProps {
 const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
   const { getTotalItems } = useCart();
   const { theme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
@@ -210,10 +219,32 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
               )}
             </Button>
 
-            {/* Login Button */}
-            <Button variant="gradient" size="sm" className="hidden md:flex rounded-xl shadow-lg shadow-primary/20">
-              Đăng nhập
-            </Button>
+            {/* Login/User Button */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="hidden md:flex rounded-xl">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium truncate">{user.email}</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut()} className="text-destructive cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Đăng xuất
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth">
+                <Button variant="gradient" size="sm" className="hidden md:flex rounded-xl shadow-lg shadow-primary/20">
+                  Đăng nhập
+                </Button>
+              </Link>
+            )}
 
             {/* Mobile menu button */}
             <Button
@@ -292,9 +323,22 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
                 Chính sách
               </Link>
 
-              <Button variant="gradient" className="mt-4 h-12 rounded-xl">
-                Đăng nhập
-              </Button>
+              {user ? (
+                <Button 
+                  variant="outline" 
+                  className="mt-4 h-12 rounded-xl text-destructive border-destructive/30"
+                  onClick={() => signOut()}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Đăng xuất
+                </Button>
+              ) : (
+                <Link to="/auth">
+                  <Button variant="gradient" className="mt-4 h-12 rounded-xl w-full">
+                    Đăng nhập
+                  </Button>
+                </Link>
+              )}
             </div>
           </nav>
         )}
