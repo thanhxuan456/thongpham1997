@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  # Application
+  app:
+    build:
+      context: ..
+      dockerfile: scripts/Dockerfile
+    container_name: themevn-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+    depends_on:
+      - db
+    volumes:
+      - uploads:/app/uploads
+    networks:
+      - themevn-network
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: themevn-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER:-themevn}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME:-themevn}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - themevn-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-themevn}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MySQL Database (Alternative)
+  # Uncomment this and comment out the 'db' service above to use MySQL
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: themevn-mysql
+  #   restart: unless-stopped
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+  #     - MYSQL_DATABASE=${DB_NAME:-themevn}
+  #     - MYSQL_USER=${DB_USER:-themevn}
+  #     - MYSQL_PASSWORD=${DB_PASSWORD}
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #     - ./database/mysql-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+  #   ports:
+  #     - "${DB_PORT:-3306}:3306"
+  #   networks:
+  #     - themevn-network
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: themevn-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - uploads:/var/www/uploads:ro
+    depends_on:
+      - app
+    networks:
+      - themevn-network
+
+  # Redis Cache (Optional)
+  # redis:
+  #   image: redis:alpine
+  #   container_name: themevn-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   networks:
+  #     - themevn-network
+
+volumes:
+  postgres_data:
+  # mysql_data:
+  # redis_data:
+  uploads:
+
+networks:
+  themevn-network:
+    driver: bridge
