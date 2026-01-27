@@ -17,11 +17,6 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY is not configured");
-    }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -30,6 +25,27 @@ serve(async (req: Request): Promise<Response> => {
 
     if (!email || !template) {
       throw new Error("Email and template are required");
+    }
+
+    // Fetch store settings including RESEND_API_KEY
+    const { data: settings, error: settingsError } = await supabase
+      .from("settings")
+      .select("key, value")
+      .in("key", ["STORE_NAME", "STORE_URL", "FROM_EMAIL", "RESEND_API_KEY"]);
+
+    if (settingsError) {
+      console.error("Error fetching settings:", settingsError);
+      throw new Error("Failed to load email configuration");
+    }
+
+    const settingsMap: Record<string, string> = {};
+    settings?.forEach((s: { key: string; value: string | null }) => {
+      settingsMap[s.key] = s.value || "";
+    });
+
+    const resendApiKey = settingsMap.RESEND_API_KEY;
+    if (!resendApiKey) {
+      throw new Error("RESEND_API_KEY is not configured in settings");
     }
 
     // Fetch the email template
@@ -43,17 +59,6 @@ serve(async (req: Request): Promise<Response> => {
     if (templateError || !templateData) {
       throw new Error(`Template "${template}" not found or inactive`);
     }
-
-    // Fetch store settings
-    const { data: settings } = await supabase
-      .from("settings")
-      .select("key, value")
-      .in("key", ["STORE_NAME", "STORE_URL"]);
-
-    const settingsMap: Record<string, string> = {};
-    settings?.forEach((s: { key: string; value: string | null }) => {
-      settingsMap[s.key] = s.value || "";
-    });
 
     // Replace variables in template
     let htmlContent = templateData.html_content;

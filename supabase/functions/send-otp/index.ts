@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.1";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -30,18 +28,34 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Email is required");
     }
 
-    if (!RESEND_API_KEY) {
-      console.error("RESEND_API_KEY is not configured");
-      throw new Error("Email service is not configured. Please contact admin.");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Fetch settings including RESEND_API_KEY from database
+    const { data: settings, error: settingsError } = await supabase
+      .from("settings")
+      .select("key, value")
+      .in("key", ["STORE_NAME", "FROM_EMAIL", "RESEND_API_KEY"]);
+
+    if (settingsError) {
+      console.error("Error fetching settings:", settingsError);
+      throw new Error("Failed to load email configuration");
+    }
+
+    const settingsMap: Record<string, string> = {};
+    settings?.forEach((s: { key: string; value: string | null }) => {
+      settingsMap[s.key] = s.value || "";
+    });
+
+    const resendApiKey = settingsMap.RESEND_API_KEY;
+    if (!resendApiKey) {
+      console.error("RESEND_API_KEY is not configured in settings");
+      throw new Error("Email service is not configured. Please add RESEND_API_KEY in Admin Settings.");
     }
 
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    // Store OTP in database
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Delete any existing OTP for this email
     await supabase
@@ -63,17 +77,6 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("Error storing OTP:", insertError);
       throw new Error("Failed to generate OTP");
     }
-
-    // Fetch settings for email configuration
-    const { data: settings } = await supabase
-      .from("settings")
-      .select("key, value")
-      .in("key", ["STORE_NAME", "FROM_EMAIL"]);
-
-    const settingsMap: Record<string, string> = {};
-    settings?.forEach((s: { key: string; value: string | null }) => {
-      settingsMap[s.key] = s.value || "";
-    });
 
     const storeName = settingsMap.STORE_NAME || "ThemeVN";
     // Use Resend test domain if no custom domain is configured
@@ -109,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Authorization": `Bearer ${resendApiKey}`,
       },
       body: JSON.stringify({
         from: `${storeName} <${fromEmail}>`,

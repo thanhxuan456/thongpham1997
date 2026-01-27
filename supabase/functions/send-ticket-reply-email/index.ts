@@ -17,11 +17,6 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      throw new Error("RESEND_API_KEY is not configured");
-    }
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -43,19 +38,30 @@ serve(async (req: Request): Promise<Response> => {
       throw new Error("Ticket not found");
     }
 
-    // Fetch store settings
-    const { data: settings } = await supabase
+    // Fetch store settings including RESEND_API_KEY
+    const { data: settings, error: settingsError } = await supabase
       .from("settings")
       .select("key, value")
-      .in("key", ["STORE_NAME", "STORE_URL"]);
+      .in("key", ["STORE_NAME", "STORE_URL", "FROM_EMAIL", "RESEND_API_KEY"]);
+
+    if (settingsError) {
+      console.error("Error fetching settings:", settingsError);
+      throw new Error("Failed to load email configuration");
+    }
 
     const settingsMap: Record<string, string> = {};
     settings?.forEach((s: { key: string; value: string | null }) => {
       settingsMap[s.key] = s.value || "";
     });
 
+    const resendApiKey = settingsMap.RESEND_API_KEY;
+    if (!resendApiKey) {
+      throw new Error("RESEND_API_KEY is not configured in settings");
+    }
+
     const storeName = settingsMap.STORE_NAME || "ThemeVN";
     const storeUrl = settingsMap.STORE_URL || "https://themevn.com";
+    const fromEmail = settingsMap.FROM_EMAIL || "onboarding@resend.dev";
 
     // Build email HTML
     const htmlContent = `
@@ -98,7 +104,7 @@ serve(async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: `${storeName} Support <noreply@themevn.com>`,
+        from: `${storeName} Support <${fromEmail}>`,
         to: [ticket.user_email],
         subject: `Re: ${ticket.subject} - ${storeName}`,
         html: htmlContent,
