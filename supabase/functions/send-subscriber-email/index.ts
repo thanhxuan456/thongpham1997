@@ -72,6 +72,11 @@ serve(async (req: Request): Promise<Response> => {
       subject = subject.replace(regex, value);
     });
 
+    const storeName = settingsMap.STORE_NAME || "ThemeVN";
+    const fromEmail = settingsMap.FROM_EMAIL || "onboarding@resend.dev";
+
+    console.log(`Sending subscriber email to ${email} using from: ${storeName} <${fromEmail}>`);
+
     // Send the email using Resend REST API
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -80,7 +85,7 @@ serve(async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: `${settingsMap.STORE_NAME || "ThemeVN"} <noreply@themevn.com>`,
+        from: `${storeName} <${fromEmail}>`,
         to: [email],
         subject: subject,
         html: htmlContent,

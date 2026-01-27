@@ -31,7 +31,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY is not configured");
+      console.error("RESEND_API_KEY is not configured");
+      throw new Error("Email service is not configured. Please contact admin.");
     }
 
     const otp = generateOtp();
@@ -63,6 +64,21 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to generate OTP");
     }
 
+    // Fetch settings for email configuration
+    const { data: settings } = await supabase
+      .from("settings")
+      .select("key, value")
+      .in("key", ["STORE_NAME", "FROM_EMAIL"]);
+
+    const settingsMap: Record<string, string> = {};
+    settings?.forEach((s: { key: string; value: string | null }) => {
+      settingsMap[s.key] = s.value || "";
+    });
+
+    const storeName = settingsMap.STORE_NAME || "ThemeVN";
+    // Use Resend test domain if no custom domain is configured
+    const fromEmail = settingsMap.FROM_EMAIL || "onboarding@resend.dev";
+
     // Determine email subject and content based on type
     let subject = "";
     let heading = "";
@@ -86,6 +102,8 @@ const handler = async (req: Request): Promise<Response> => {
         break;
     }
 
+    console.log(`Sending OTP email to ${email} using from: ${storeName} <${fromEmail}>`);
+
     // Send email using Resend API directly
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -94,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
         "Authorization": `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "ThemeMarket <onboarding@resend.dev>",
+        from: `${storeName} <${fromEmail}>`,
         to: [email],
         subject,
         html: `
@@ -121,13 +139,13 @@ const handler = async (req: Request): Promise<Response> => {
       }),
     });
 
+    const emailResult = await emailResponse.json();
+
     if (!emailResponse.ok) {
-      const errorData = await emailResponse.json();
-      console.error("Resend API error:", errorData);
-      throw new Error("Failed to send email");
+      console.error("Resend API error:", emailResult);
+      throw new Error(emailResult.message || "Failed to send email");
     }
 
-    const emailResult = await emailResponse.json();
     console.log("OTP email sent successfully:", emailResult);
 
     return new Response(
