@@ -7,6 +7,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import AnalyticsProvider from "@/components/AnalyticsProvider";
+import BackToTop from "@/components/BackToTop";
 import Index from "./pages/Index";
 import Checkout from "./pages/Checkout";
 import ThemePreview from "./pages/ThemePreview";
@@ -36,6 +37,7 @@ const App = () => (
         <AuthProvider>
           <CartProvider>
             <AnalyticsProvider />
+            <BackToTop />
             <Toaster />
             <Sonner />
             <BrowserRouter>
