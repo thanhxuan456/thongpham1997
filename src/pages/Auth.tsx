@@ -179,13 +179,13 @@ const Auth = () => {
             loop
             muted
             playsInline
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover will-change-auto pointer-events-none"
           >
             <source src={authBgVideo} type="video/mp4" />
           </video>
           
           {/* Overlay */}
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-sm pointer-events-none" />
           
           {/* Content */}
           <div className="relative z-10 w-full max-w-md mx-auto px-4">
@@ -261,13 +261,13 @@ const Auth = () => {
           loop
           muted
           playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover will-change-auto pointer-events-none"
         >
           <source src={authBgVideo} type="video/mp4" />
         </video>
         
         {/* Overlay */}
-        <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-background/60 backdrop-blur-sm pointer-events-none" />
 
         {/* Content */}
         <div className="relative z-10 min-h-screen flex">
