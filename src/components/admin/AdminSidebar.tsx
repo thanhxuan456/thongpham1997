@@ -108,7 +108,10 @@ const AdminSidebar = ({ collapsed, onToggle }: AdminSidebarProps) => {
     >
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-border flex-shrink-0">
+        <div className={cn(
+          "flex items-center border-b border-border flex-shrink-0 px-2",
+          collapsed ? "h-auto py-3 flex-col gap-2" : "h-16 justify-between px-4"
+        )}>
           {!collapsed && (
             <Link to="/admin" className="flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center shadow-md">
@@ -117,31 +120,32 @@ const AdminSidebar = ({ collapsed, onToggle }: AdminSidebarProps) => {
               <span className="font-bold text-foreground">Admin Panel</span>
             </Link>
           )}
-          <div className={cn("flex items-center gap-1", collapsed && "mx-auto flex-col gap-2")}>
-            {/* Notification Bell */}
-            <Link to="/admin/support">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-lg relative hover:bg-primary/10"
-              >
-                <Bell className="h-5 w-5" />
-                {unreadNotifications > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-medium animate-pulse">
-                    {unreadNotifications > 9 ? "9+" : unreadNotifications}
-                  </span>
-                )}
-              </Button>
-            </Link>
+          
+          {/* Toggle Button - always on top when collapsed */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggle}
+            className="rounded-lg hover:bg-primary/10"
+          >
+            <ChevronLeft className={cn("h-5 w-5 transition-transform duration-300", collapsed && "rotate-180")} />
+          </Button>
+          
+          {/* Notification Bell */}
+          <Link to="/admin/support">
             <Button
               variant="ghost"
               size="icon"
-              onClick={onToggle}
-              className="rounded-lg hover:bg-primary/10"
+              className="rounded-lg relative hover:bg-primary/10"
             >
-              <ChevronLeft className={cn("h-5 w-5 transition-transform duration-300", collapsed && "rotate-180")} />
+              <Bell className="h-5 w-5" />
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-medium animate-pulse">
+                  {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                </span>
+              )}
             </Button>
-          </div>
+          </Link>
         </div>
 
         {/* Navigation - scrollable area */}
