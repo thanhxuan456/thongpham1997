@@ -47,7 +47,10 @@ import {
   Download,
   Star,
   ExternalLink,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Loader2,
+  Wand2,
+  RefreshCw
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -87,6 +90,7 @@ const AdminThemes = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [generatingThumbnail, setGeneratingThumbnail] = useState(false);
   const { toast } = useToast();
 
   const fetchThemes = async () => {
@@ -358,7 +362,7 @@ const AdminThemes = () => {
                   </Select>
                 </div>
 
-                {/* Image URL */}
+                {/* Image URL with Auto-Generate */}
                 <div className="grid gap-2">
                   <Label htmlFor="image_url">URL Hình ảnh</Label>
                   <div className="flex gap-2">
@@ -371,7 +375,62 @@ const AdminThemes = () => {
                       placeholder="https://..."
                       className="flex-1"
                     />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      disabled={!editingTheme?.demo_url || generatingThumbnail}
+                      onClick={async () => {
+                        if (!editingTheme?.demo_url) return;
+                        setGeneratingThumbnail(true);
+                        try {
+                          const response = await supabase.functions.invoke('generate-thumbnail', {
+                            body: { 
+                              url: editingTheme.demo_url,
+                              width: 1280,
+                              height: 800
+                            }
+                          });
+                          
+                          if (response.data?.success) {
+                            setEditingTheme({ 
+                              ...editingTheme, 
+                              image_url: response.data.thumbnail_url,
+                              name: editingTheme.name || response.data.title || "",
+                              description: editingTheme.description || response.data.description || ""
+                            });
+                            toast({
+                              title: "Thành công",
+                              description: "Đã tạo thumbnail từ URL demo",
+                            });
+                          } else {
+                            throw new Error(response.data?.error || "Failed to generate thumbnail");
+                          }
+                        } catch (error) {
+                          console.error("Error generating thumbnail:", error);
+                          toast({
+                            variant: "destructive",
+                            title: "Lỗi",
+                            description: "Không thể tạo thumbnail tự động",
+                          });
+                        } finally {
+                          setGeneratingThumbnail(false);
+                        }
+                      }}
+                      title="Tự động tạo thumbnail từ URL Demo"
+                    >
+                      {generatingThumbnail ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Wand2 className="h-4 w-4" />
+                      )}
+                    </Button>
                   </div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <ImageIcon className="h-3 w-3" />
+                    Kích thước khuyến nghị: 1280 x 800px. Bấm 
+                    <Wand2 className="h-3 w-3 inline" /> để tự động tạo từ URL Demo.
+                  </p>
                   {editingTheme?.image_url && (
                     <div className="mt-2 p-2 border rounded-lg bg-muted/50">
                       <img
@@ -389,14 +448,27 @@ const AdminThemes = () => {
                 {/* Demo URL */}
                 <div className="grid gap-2">
                   <Label htmlFor="demo_url">URL Demo</Label>
-                  <Input
-                    id="demo_url"
-                    value={editingTheme?.demo_url || ""}
-                    onChange={(e) =>
-                      setEditingTheme({ ...editingTheme, demo_url: e.target.value })
-                    }
-                    placeholder="https://..."
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="demo_url"
+                      value={editingTheme?.demo_url || ""}
+                      onChange={(e) =>
+                        setEditingTheme({ ...editingTheme, demo_url: e.target.value })
+                      }
+                      placeholder="https://..."
+                      className="flex-1"
+                    />
+                    {editingTheme?.demo_url && (
+                      <Button variant="outline" size="icon" asChild>
+                        <a href={editingTheme.demo_url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Nhập URL demo rồi bấm <Wand2 className="h-3 w-3 inline" /> ở trên để tự động tạo thumbnail
+                  </p>
                 </div>
 
                 {/* Toggles */}
