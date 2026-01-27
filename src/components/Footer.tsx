@@ -1,9 +1,67 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube, Send, Heart } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube, Send, Heart, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WaveDivider from "@/components/WaveDivider";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const Footer = () => {
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !email.includes("@")) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Vui lòng nhập email hợp lệ",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const { error } = await supabase
+        .from("subscribers")
+        .insert({ email: email.trim().toLowerCase() });
+
+      if (error) {
+        if (error.code === "23505") {
+          toast({
+            title: "Đã đăng ký",
+            description: "Email này đã được đăng ký nhận tin trước đó!",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        setIsSubscribed(true);
+        toast({
+          title: "Đăng ký thành công! 🎉",
+          description: "Cảm ơn bạn đã đăng ký nhận tin từ ThemeVN!",
+        });
+        setEmail("");
+        
+        // Reset success state after 5 seconds
+        setTimeout(() => setIsSubscribed(false), 5000);
+      }
+    } catch (error) {
+      console.error("Error subscribing:", error);
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể đăng ký. Vui lòng thử lại sau.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <footer className="relative mt-20">
       {/* Wave divider at top */}
@@ -26,16 +84,61 @@ const Footer = () => {
             <p className="text-white/70 mb-6">
               Nhận thông tin về themes mới, khuyến mãi và tips hữu ích về WordPress
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Email của bạn..."
-                className="flex-1 h-12 px-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
-              />
-              <Button className="h-12 px-6 bg-accent hover:bg-accent/90 text-accent-foreground">
-                <Send className="mr-2 h-4 w-4" />
-                Đăng ký
-              </Button>
+            
+            {isSubscribed ? (
+              <div className="flex flex-col items-center gap-3 p-6 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl animate-in fade-in duration-500">
+                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <CheckCircle className="h-8 w-8 text-green-400" />
+                </div>
+                <h4 className="text-xl font-semibold text-white">Đăng ký thành công!</h4>
+                <p className="text-white/70">
+                  Cảm ơn bạn! Hãy kiểm tra email để nhận ưu đãi WELCOME10 giảm 10%.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email của bạn..."
+                  disabled={isSubmitting}
+                  className="flex-1 h-12 px-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all disabled:opacity-50"
+                />
+                <Button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="h-12 px-6 bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Đăng ký
+                    </>
+                  )}
+                </Button>
+              </form>
+            )}
+            
+            {/* Benefits list */}
+            <div className="flex flex-wrap justify-center gap-4 mt-6">
+              {[
+                "🆕 Theme mới ra mắt",
+                "🎁 Mã giảm giá độc quyền",
+                "💡 Tips WordPress"
+              ].map((benefit) => (
+                <span 
+                  key={benefit}
+                  className="text-sm text-white/70 bg-white/10 px-3 py-1 rounded-full"
+                >
+                  {benefit}
+                </span>
+              ))}
             </div>
           </div>
 

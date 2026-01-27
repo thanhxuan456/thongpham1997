@@ -35,7 +35,9 @@ import {
   Eye,
   EyeOff,
   Loader2,
-  QrCode
+  QrCode,
+  Phone,
+  Image as ImageIcon
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -214,7 +216,7 @@ const AdminSettings = () => {
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 h-auto gap-2 bg-muted/50 p-2">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-8 h-auto gap-2 bg-muted/50 p-2">
             <TabsTrigger value="general" className="gap-2 data-[state=active]:bg-background">
               <Settings className="h-4 w-4" />
               <span className="hidden sm:inline">Chung</span>
@@ -222,6 +224,10 @@ const AdminSettings = () => {
             <TabsTrigger value="api" className="gap-2 data-[state=active]:bg-background">
               <Key className="h-4 w-4" />
               <span className="hidden sm:inline">API Keys</span>
+            </TabsTrigger>
+            <TabsTrigger value="secrets" className="gap-2 data-[state=active]:bg-background">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Secrets</span>
             </TabsTrigger>
             <TabsTrigger value="store" className="gap-2 data-[state=active]:bg-background">
               <Store className="h-4 w-4" />
@@ -640,6 +646,238 @@ const AdminSettings = () => {
                           </Button>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Secrets Management */}
+          <TabsContent value="secrets" className="space-y-6">
+            <Card className="border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-primary" />
+                  Quản lý Secrets
+                </CardTitle>
+                <CardDescription>
+                  Quản lý các API keys và secrets cho SMS, thông báo và tích hợp bên ngoài
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* SMS Provider */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    SMS Provider (Vonage)
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Sử dụng Vonage để gửi SMS thông báo cho admin khi có support ticket mới
+                  </p>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Vonage API Key</Label>
+                      <div className="relative">
+                        <Input 
+                          type={showSecrets['VONAGE_API_KEY'] ? 'text' : 'password'}
+                          value={formValues['VONAGE_API_KEY'] || ''}
+                          onChange={(e) => updateFormValue('VONAGE_API_KEY', e.target.value)}
+                          placeholder="xxxxxxxx"
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full"
+                          onClick={() => toggleSecretVisibility('VONAGE_API_KEY')}
+                        >
+                          {showSecrets['VONAGE_API_KEY'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Vonage API Secret</Label>
+                      <div className="relative">
+                        <Input 
+                          type={showSecrets['VONAGE_API_SECRET'] ? 'text' : 'password'}
+                          value={formValues['VONAGE_API_SECRET'] || ''}
+                          onChange={(e) => updateFormValue('VONAGE_API_SECRET', e.target.value)}
+                          placeholder="xxxxxxxxxxxxxxxx"
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full"
+                          onClick={() => toggleSecretVisibility('VONAGE_API_SECRET')}
+                        >
+                          {showSecrets['VONAGE_API_SECRET'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Số điện thoại admin nhận thông báo</Label>
+                    <Input 
+                      value={formValues['ADMIN_PHONE_NUMBER'] || ''}
+                      onChange={(e) => updateFormValue('ADMIN_PHONE_NUMBER', e.target.value)}
+                      placeholder="+84912345678"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Định dạng quốc tế: +84 cho Việt Nam
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" asChild className="gap-2">
+                    <a href="https://dashboard.nexmo.com/getting-started/api" target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4" />
+                      Lấy API Key từ Vonage
+                    </a>
+                  </Button>
+                </div>
+
+                <Separator />
+
+                {/* MessageBird Alternative */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    SMS Provider (MessageBird - Alternative)
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Thay thế cho Vonage nếu cần. Chỉ cần 1 provider, không cần cả hai.
+                  </p>
+                  <div className="space-y-2">
+                    <Label>MessageBird API Key</Label>
+                    <div className="relative">
+                      <Input 
+                        type={showSecrets['MESSAGEBIRD_API_KEY'] ? 'text' : 'password'}
+                        value={formValues['MESSAGEBIRD_API_KEY'] || ''}
+                        onChange={(e) => updateFormValue('MESSAGEBIRD_API_KEY', e.target.value)}
+                        placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full"
+                        onClick={() => toggleSecretVisibility('MESSAGEBIRD_API_KEY')}
+                      >
+                        {showSecrets['MESSAGEBIRD_API_KEY'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" asChild className="gap-2">
+                    <a href="https://dashboard.messagebird.com/en/developers/access" target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4" />
+                      Lấy API Key từ MessageBird
+                    </a>
+                  </Button>
+                </div>
+
+                <Separator />
+
+                {/* Webhook URLs */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    Webhook URLs
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Cấu hình webhook để nhận thông báo từ các dịch vụ bên ngoài
+                  </p>
+                  <div className="space-y-2">
+                    <Label>Discord Webhook URL</Label>
+                    <div className="relative">
+                      <Input 
+                        type={showSecrets['DISCORD_WEBHOOK_URL'] ? 'text' : 'password'}
+                        value={formValues['DISCORD_WEBHOOK_URL'] || ''}
+                        onChange={(e) => updateFormValue('DISCORD_WEBHOOK_URL', e.target.value)}
+                        placeholder="https://discord.com/api/webhooks/..."
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full"
+                        onClick={() => toggleSecretVisibility('DISCORD_WEBHOOK_URL')}
+                      >
+                        {showSecrets['DISCORD_WEBHOOK_URL'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Telegram Bot Token</Label>
+                    <div className="relative">
+                      <Input 
+                        type={showSecrets['TELEGRAM_BOT_TOKEN'] ? 'text' : 'password'}
+                        value={formValues['TELEGRAM_BOT_TOKEN'] || ''}
+                        onChange={(e) => updateFormValue('TELEGRAM_BOT_TOKEN', e.target.value)}
+                        placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-full"
+                        onClick={() => toggleSecretVisibility('TELEGRAM_BOT_TOKEN')}
+                      >
+                        {showSecrets['TELEGRAM_BOT_TOKEN'] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Telegram Chat ID</Label>
+                    <Input 
+                      value={formValues['TELEGRAM_CHAT_ID'] || ''}
+                      onChange={(e) => updateFormValue('TELEGRAM_CHAT_ID', e.target.value)}
+                      placeholder="-1001234567890"
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Thumbnail Service */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4" />
+                    Thumbnail Service
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Kích thước thumbnail mặc định khi tự động tạo từ URL demo
+                  </p>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Chiều rộng (px)</Label>
+                      <Input 
+                        type="number"
+                        value={formValues['THUMBNAIL_WIDTH'] || '1280'}
+                        onChange={(e) => updateFormValue('THUMBNAIL_WIDTH', e.target.value)}
+                        placeholder="1280"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Chiều cao (px)</Label>
+                      <Input 
+                        type="number"
+                        value={formValues['THUMBNAIL_HEIGHT'] || '800'}
+                        onChange={(e) => updateFormValue('THUMBNAIL_HEIGHT', e.target.value)}
+                        placeholder="800"
+                      />
+                    </div>
+                  </div>
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <p className="text-sm font-medium mb-2">Kích thước khuyến nghị:</p>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline">1280 x 800 (Mặc định)</Badge>
+                      <Badge variant="outline">1920 x 1080 (Full HD)</Badge>
+                      <Badge variant="outline">800 x 600 (Compact)</Badge>
                     </div>
                   </div>
                 </div>
