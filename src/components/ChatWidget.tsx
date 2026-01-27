@@ -235,10 +235,23 @@ const ChatWidget = () => {
     }
   };
 
-  const handleRate = (stars: number) => {
+  const handleRate = async (stars: number) => {
     setRating(stars);
     setHasRated(true);
     toast.success(`Cảm ơn bạn đã đánh giá ${stars} sao! ⭐`);
+    
+    // Save rating to database
+    try {
+      await supabase.from("chat_ratings").insert({
+        ticket_id: currentTicket?.id || null,
+        user_id: user?.id || null,
+        user_email: user?.email || ticketForm.email || null,
+        rating: stars,
+        user_agent: navigator.userAgent
+      });
+    } catch (error) {
+      console.log("Could not save rating:", error);
+    }
     
     // Auto close rating after 1.5s
     setTimeout(() => {

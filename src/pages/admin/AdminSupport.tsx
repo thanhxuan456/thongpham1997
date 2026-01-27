@@ -184,11 +184,25 @@ const AdminSupport = () => {
     });
 
     if (!error) {
+      const messageSent = newMessage.trim();
       setNewMessage("");
       
       // Update ticket status to pending if it was open
       if (selectedTicket.status === "open") {
         await updateTicketStatus("pending");
+      }
+      
+      // Send email notification to customer
+      try {
+        await supabase.functions.invoke("send-ticket-reply-email", {
+          body: { 
+            ticketId: selectedTicket.id,
+            message: messageSent
+          }
+        });
+        toast.success("Đã gửi email thông báo cho khách hàng");
+      } catch (emailError) {
+        console.log("Could not send email notification:", emailError);
       }
     }
 
