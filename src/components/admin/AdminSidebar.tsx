@@ -102,108 +102,117 @@ const AdminSidebar = ({ collapsed, onToggle }: AdminSidebarProps) => {
   return (
     <aside 
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-card border-r border-border transition-all duration-300 flex flex-col",
+        "fixed left-0 top-0 z-40 h-screen bg-card border-r border-border transition-all duration-300",
         collapsed ? "w-16" : "w-64"
       )}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-border shrink-0">
-        {!collapsed && (
-          <Link to="/admin" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">A</span>
-            </div>
-            <span className="font-bold text-foreground">Admin Panel</span>
-          </Link>
-        )}
-        <div className={cn("flex items-center gap-1", collapsed && "mx-auto flex-col gap-2")}>
-          {/* Notification Bell */}
-          <Link to="/admin/support">
+      <div className="flex flex-col h-full">
+        {/* Header */}
+        <div className="flex items-center justify-between h-16 px-4 border-b border-border flex-shrink-0">
+          {!collapsed && (
+            <Link to="/admin" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center shadow-md">
+                <span className="text-primary-foreground font-bold text-sm">A</span>
+              </div>
+              <span className="font-bold text-foreground">Admin Panel</span>
+            </Link>
+          )}
+          <div className={cn("flex items-center gap-1", collapsed && "mx-auto flex-col gap-2")}>
+            {/* Notification Bell */}
+            <Link to="/admin/support">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-lg relative hover:bg-primary/10"
+              >
+                <Bell className="h-5 w-5" />
+                {unreadNotifications > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-medium animate-pulse">
+                    {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                  </span>
+                )}
+              </Button>
+            </Link>
             <Button
               variant="ghost"
               size="icon"
-              className="rounded-lg relative"
+              onClick={onToggle}
+              className="rounded-lg hover:bg-primary/10"
             >
-              <Bell className="h-5 w-5" />
-              {unreadNotifications > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                >
-                  {unreadNotifications > 9 ? "9+" : unreadNotifications}
-                </Badge>
-              )}
+              <ChevronLeft className={cn("h-5 w-5 transition-transform duration-300", collapsed && "rotate-180")} />
             </Button>
-          </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggle}
-            className="rounded-lg"
-          >
-            <ChevronLeft className={cn("h-5 w-5 transition-transform", collapsed && "rotate-180")} />
-          </Button>
+          </div>
         </div>
-      </div>
 
-      {/* Navigation with custom scrollbar */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto admin-sidebar-scroll">
-        {menuItems.map((item) => {
-          const isActive = location.pathname === item.path || 
-            (item.path !== "/admin" && location.pathname.startsWith(item.path));
-          
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative",
-                isActive 
-                  ? "bg-primary text-primary-foreground" 
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-                collapsed && "justify-center px-2"
-              )}
-            >
-              <item.icon className="h-5 w-5 flex-shrink-0" />
-              {!collapsed && <span className="font-medium">{item.label}</span>}
-              {item.showBadge && unreadCount > 0 && (
-                <Badge 
-                  variant={isActive ? "secondary" : "destructive"}
+        {/* Navigation - scrollable area */}
+        <nav className="flex-1 overflow-y-auto admin-sidebar-scroll p-3">
+          <div className="space-y-1">
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path || 
+                (item.path !== "/admin" && location.pathname.startsWith(item.path));
+              
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
                   className={cn(
-                    "ml-auto h-5 min-w-[20px] flex items-center justify-center text-xs",
-                    collapsed && "absolute -top-1 -right-1"
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all relative group",
+                    isActive 
+                      ? "bg-primary text-primary-foreground shadow-md" 
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                    collapsed && "justify-center px-2"
                   )}
+                  title={collapsed ? item.label : undefined}
                 >
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </Badge>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
+                  <item.icon className={cn(
+                    "h-5 w-5 flex-shrink-0 transition-transform",
+                    !isActive && "group-hover:scale-110"
+                  )} />
+                  {!collapsed && <span className="font-medium">{item.label}</span>}
+                  {item.showBadge && unreadCount > 0 && (
+                    <span 
+                      className={cn(
+                        "flex items-center justify-center text-xs font-medium rounded-full min-w-[20px] h-5 px-1",
+                        isActive 
+                          ? "bg-primary-foreground/20 text-primary-foreground" 
+                          : "bg-destructive text-destructive-foreground animate-pulse",
+                        collapsed ? "absolute -top-1 -right-1" : "ml-auto"
+                      )}
+                    >
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
 
-      {/* Footer */}
-      <div className="p-3 border-t border-border shrink-0">
-        <Link
-          to="/"
-          className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-all mb-1",
-            collapsed && "justify-center px-2"
-          )}
-        >
-          <ChevronLeft className="h-5 w-5" />
-          {!collapsed && <span className="font-medium">Về trang chủ</span>}
-        </Link>
-        <button
-          onClick={() => signOut()}
-          className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-destructive hover:bg-destructive/10 transition-all w-full",
-            collapsed && "justify-center px-2"
-          )}
-        >
-          <LogOut className="h-5 w-5" />
-          {!collapsed && <span className="font-medium">Đăng xuất</span>}
-        </button>
+        {/* Footer - fixed at bottom */}
+        <div className="flex-shrink-0 p-3 border-t border-border bg-card">
+          <Link
+            to="/"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-all mb-1 group",
+              collapsed && "justify-center px-2"
+            )}
+            title={collapsed ? "Về trang chủ" : undefined}
+          >
+            <ChevronLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
+            {!collapsed && <span className="font-medium">Về trang chủ</span>}
+          </Link>
+          <button
+            onClick={() => signOut()}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-destructive hover:bg-destructive/10 transition-all w-full group",
+              collapsed && "justify-center px-2"
+            )}
+            title={collapsed ? "Đăng xuất" : undefined}
+          >
+            <LogOut className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+            {!collapsed && <span className="font-medium">Đăng xuất</span>}
+          </button>
+        </div>
       </div>
     </aside>
   );
