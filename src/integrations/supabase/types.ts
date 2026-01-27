@@ -52,6 +52,56 @@ export type Database = {
           },
         ]
       }
+      chat_ratings: {
+        Row: {
+          created_at: string
+          feedback: string | null
+          id: string
+          ip_address: string | null
+          is_suspicious: boolean
+          is_verified: boolean
+          rating: number
+          ticket_id: string | null
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          ip_address?: string | null
+          is_suspicious?: boolean
+          is_verified?: boolean
+          rating: number
+          ticket_id?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          ip_address?: string | null
+          is_suspicious?: boolean
+          is_verified?: boolean
+          rating?: number
+          ticket_id?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_ratings_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           code: string

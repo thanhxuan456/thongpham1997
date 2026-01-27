@@ -11,7 +11,8 @@ import {
   Menu,
   Mail,
   MessageCircle,
-  UserCheck
+  UserCheck,
+  Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +30,7 @@ const menuItems = [
   { icon: Tag, label: "Mã giảm giá", path: "/admin/coupons" },
   { icon: ShoppingCart, label: "Quản lý Đơn hàng", path: "/admin/orders" },
   { icon: MessageCircle, label: "Hỗ trợ khách hàng", path: "/admin/support" },
+  { icon: Star, label: "Đánh giá", path: "/admin/ratings" },
   { icon: UserCheck, label: "Subscribers", path: "/admin/subscribers" },
   { icon: Menu, label: "Quản lý Menu", path: "/admin/menus" },
   { icon: Mail, label: "Email Templates", path: "/admin/emails" },
