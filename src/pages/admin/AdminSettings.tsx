@@ -356,13 +356,54 @@ const AdminSettings = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Globe className="h-5 w-5 text-primary" />
-                  Cài đặt SEO
+                  Cài đặt SEO & Meta Tags
                 </CardTitle>
                 <CardDescription>
                   Tối ưu hóa website cho công cụ tìm kiếm
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Tiêu đề Website (Title Tag)</Label>
+                    <Input 
+                      value={formValues['META_TITLE'] || 'ThemeVN - Nền tảng WordPress Themes hàng đầu Việt Nam'}
+                      onChange={(e) => updateFormValue('META_TITLE', e.target.value)}
+                      placeholder="ThemeVN - Nền tảng WordPress Themes hàng đầu Việt Nam"
+                      maxLength={60}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Tối đa 60 ký tự. Hiện tại: {(formValues['META_TITLE'] || 'ThemeVN - Nền tảng WordPress Themes hàng đầu Việt Nam').length}/60
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Mô tả Website (Meta Description)</Label>
+                    <Textarea 
+                      value={formValues['META_DESCRIPTION'] || 'Khám phá hàng trăm WordPress themes chất lượng cao được thiết kế chuyên nghiệp, tối ưu SEO và tốc độ tải nhanh.'}
+                      onChange={(e) => updateFormValue('META_DESCRIPTION', e.target.value)}
+                      placeholder="Mô tả ngắn gọn về website..."
+                      rows={3}
+                      maxLength={160}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Tối đa 160 ký tự. Hiện tại: {(formValues['META_DESCRIPTION'] || 'Khám phá hàng trăm WordPress themes chất lượng cao được thiết kế chuyên nghiệp, tối ưu SEO và tốc độ tải nhanh.').length}/160
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Từ khóa (Meta Keywords)</Label>
+                    <Input 
+                      value={formValues['META_KEYWORDS'] || 'wordpress themes, theme wordpress vietnam, mua theme wordpress'}
+                      onChange={(e) => updateFormValue('META_KEYWORDS', e.target.value)}
+                      placeholder="từ khóa 1, từ khóa 2, từ khóa 3..."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Các từ khóa cách nhau bởi dấu phẩy
+                    </p>
+                  </div>
+                </div>
+                
+                <Separator />
+                
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Google Analytics ID</Label>
@@ -378,6 +419,22 @@ const AdminSettings = () => {
                       value={formValues['FACEBOOK_PIXEL_ID'] || ''}
                       onChange={(e) => updateFormValue('FACEBOOK_PIXEL_ID', e.target.value)}
                       placeholder="XXXXXXXXXXXXXXX"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Google Tag Manager ID</Label>
+                    <Input 
+                      value={formValues['GTM_ID'] || ''}
+                      onChange={(e) => updateFormValue('GTM_ID', e.target.value)}
+                      placeholder="GTM-XXXXXXX"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Canonical URL</Label>
+                    <Input 
+                      value={formValues['CANONICAL_URL'] || ''}
+                      onChange={(e) => updateFormValue('CANONICAL_URL', e.target.value)}
+                      placeholder="https://themevn.com"
                     />
                   </div>
                 </div>
@@ -915,6 +972,7 @@ const AdminSettings = () => {
 
           {/* Security Settings */}
           <TabsContent value="security" className="space-y-6">
+            {/* 2FA Section */}
             <Card className="border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -922,23 +980,89 @@ const AdminSettings = () => {
                   Xác thực hai yếu tố (2FA)
                 </CardTitle>
                 <CardDescription>
-                  Bảo vệ tài khoản với xác thực hai yếu tố
+                  Bảo vệ tài khoản với xác thực hai yếu tố qua Email OTP
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
+                {/* 2FA Status */}
                 <div className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-muted/50">
                   <div className="flex items-center gap-4">
                     <div className="p-3 rounded-lg bg-primary/10">
                       <Shield className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <p className="font-medium">Xác thực 2FA</p>
+                      <p className="font-medium">Xác thực 2FA qua Email</p>
                       <p className="text-sm text-muted-foreground">
-                        Thêm một lớp bảo mật cho tài khoản
+                        Mã OTP được gửi đến email khi đăng nhập
                       </p>
                     </div>
                   </div>
-                  <Button variant="outline">Thiết lập</Button>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="outline" className={formValues['2FA_ENABLED'] === 'true' ? "bg-green-500/10 text-green-500 border-green-500/20" : ""}>
+                      {formValues['2FA_ENABLED'] === 'true' ? "Đang bật" : "Chưa bật"}
+                    </Badge>
+                    <Switch 
+                      checked={formValues['2FA_ENABLED'] === 'true'}
+                      onCheckedChange={(checked) => updateFormValue('2FA_ENABLED', checked ? 'true' : 'false')}
+                    />
+                  </div>
+                </div>
+
+                {/* 2FA Methods */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm">Phương thức xác thực</h4>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className={`p-4 rounded-lg border transition-colors ${formValues['2FA_METHOD'] === 'email' ? 'border-primary bg-primary/5' : 'border-border/50'}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-5 w-5 text-primary" />
+                          <span className="font-medium">Email OTP</span>
+                        </div>
+                        <Switch 
+                          checked={formValues['2FA_METHOD'] === 'email' || !formValues['2FA_METHOD']}
+                          onCheckedChange={() => updateFormValue('2FA_METHOD', 'email')}
+                        />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Gửi mã xác thực 6 số qua email mỗi lần đăng nhập
+                      </p>
+                    </div>
+                    <div className={`p-4 rounded-lg border transition-colors ${formValues['2FA_METHOD'] === 'totp' ? 'border-primary bg-primary/5' : 'border-border/50 opacity-60'}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Key className="h-5 w-5 text-muted-foreground" />
+                          <span className="font-medium">Authenticator App</span>
+                          <Badge variant="outline" className="text-xs">Sắp ra mắt</Badge>
+                        </div>
+                        <Switch disabled />
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Sử dụng Google Authenticator hoặc Authy
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recovery Options */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm">Tùy chọn khôi phục</h4>
+                  <div className="p-4 rounded-lg border border-border/50 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm">Email khôi phục</p>
+                        <p className="text-sm text-muted-foreground">{user?.email || 'Chưa thiết lập'}</p>
+                      </div>
+                      <Button variant="outline" size="sm">Thay đổi</Button>
+                    </div>
+                    <Separator />
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm">Mã khôi phục</p>
+                        <p className="text-sm text-muted-foreground">10 mã dự phòng để truy cập khi mất 2FA</p>
+                      </div>
+                      <Button variant="outline" size="sm">Tạo mã mới</Button>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -967,6 +1091,15 @@ const AdminSettings = () => {
                   </div>
                   <Button variant="outline">Xem tất cả</Button>
                 </div>
+                <div className="flex items-center justify-between p-4 rounded-lg border border-border/50">
+                  <div>
+                    <p className="font-medium">Đăng xuất tất cả thiết bị</p>
+                    <p className="text-sm text-muted-foreground">
+                      Đăng xuất khỏi tất cả thiết bị ngoại trừ thiết bị này
+                    </p>
+                  </div>
+                  <Button variant="destructive" size="sm">Đăng xuất tất cả</Button>
+                </div>
               </CardContent>
             </Card>
 
@@ -981,13 +1114,19 @@ const AdminSettings = () => {
               <CardContent>
                 <div className="space-y-3">
                   {[
-                    { action: "Đăng nhập thành công", time: "Hôm nay, 10:30", device: "Chrome / Windows" },
-                    { action: "Đổi mật khẩu", time: "3 ngày trước", device: "Safari / macOS" },
-                    { action: "Đăng nhập thành công", time: "5 ngày trước", device: "Chrome / Android" },
+                    { action: "Đăng nhập thành công", time: "Hôm nay, 10:30", device: "Chrome / Windows", status: "success" },
+                    { action: "Bật xác thực 2FA", time: "Hôm qua, 14:20", device: "Chrome / Windows", status: "success" },
+                    { action: "Đổi mật khẩu", time: "3 ngày trước", device: "Safari / macOS", status: "success" },
+                    { action: "Đăng nhập thất bại", time: "4 ngày trước", device: "Unknown / Unknown", status: "failed" },
+                    { action: "Đăng nhập thành công", time: "5 ngày trước", device: "Chrome / Android", status: "success" },
                   ].map((log, idx) => (
                     <div key={idx} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
                       <div className="flex items-center gap-3">
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        {log.status === "success" ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-destructive" />
+                        )}
                         <div>
                           <p className="text-sm font-medium">{log.action}</p>
                           <p className="text-xs text-muted-foreground">{log.device}</p>

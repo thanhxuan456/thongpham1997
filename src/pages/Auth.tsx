@@ -7,11 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, ArrowLeft, Loader2, Sparkles, Shield, Zap } from "lucide-react";
+import { Mail, Lock, ArrowLeft, Loader2, Sparkles, Shield, Zap, Eye, EyeOff, Wand2, ChevronDown } from "lucide-react";
 import authBgVideo from "@/assets/auth-background.mp4";
+import logoImage from "@/assets/logo.png";
 import AuthHeader from "@/components/AuthHeader";
 import AuthFooter from "@/components/AuthFooter";
+import PasswordGenerator from "@/components/PasswordGenerator";
 
 // Move AuthCard outside the component to prevent re-creation on every render
 const AuthCard = memo(({ children }: { children: React.ReactNode }) => (
@@ -44,12 +48,42 @@ const Auth = () => {
   const [pendingSignupEmail, setPendingSignupEmail] = useState("");
   const [pendingSignupPassword, setPendingSignupPassword] = useState("");
   const [otpType, setOtpType] = useState<"login" | "signup" | "recovery">("login");
+  
+  // New states for remember password and password visibility
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswordGenerator, setShowPasswordGenerator] = useState(false);
+
+  // Load saved email from localStorage on mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("themevn_remember_email");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
       navigate("/");
     }
   }, [user, navigate]);
+
+  // Save or remove email based on rememberMe
+  const handleRememberMe = (checked: boolean) => {
+    setRememberMe(checked);
+    if (!checked) {
+      localStorage.removeItem("themevn_remember_email");
+    }
+  };
+
+  // Handle generated password selection
+  const handlePasswordGenerated = (generatedPassword: string) => {
+    setPassword(generatedPassword);
+    setConfirmPassword(generatedPassword);
+    setShowPasswordGenerator(false);
+  };
 
   // Handle signup - send OTP first for verification
   const handleSignUp = async (e: React.FormEvent) => {
@@ -100,6 +134,12 @@ const Auth = () => {
   const handleLoginWithPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
+    // Save email if remember me is checked
+    if (rememberMe) {
+      localStorage.setItem("themevn_remember_email", email);
+    }
+    
     const { error } = await signInWithPassword(email, password);
     setLoading(false);
 
@@ -216,10 +256,7 @@ const Auth = () => {
           <div className="relative z-10 w-full max-w-md mx-auto px-4">
             {/* Logo */}
             <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <span className="text-xl font-bold text-primary-foreground">T</span>
-              </div>
-              <span className="text-2xl font-bold text-foreground">ThemeVN</span>
+              <img src={logoImage} alt="ThemeVN" className="h-12 w-auto" />
             </Link>
 
             <AuthCard>
@@ -299,10 +336,7 @@ const Auth = () => {
           {/* Left Side - Branding (hidden on mobile) */}
           <div className="hidden lg:flex lg:w-1/2 flex-col justify-center p-12 xl:p-20">
             <Link to="/" className="flex items-center gap-3 mb-12">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
-                <span className="text-2xl font-bold text-primary-foreground">T</span>
-              </div>
-              <span className="text-3xl font-bold text-foreground">ThemeVN</span>
+              <img src={logoImage} alt="ThemeVN" className="h-14 w-auto" />
             </Link>
 
             <h1 className="text-4xl xl:text-5xl font-bold text-foreground mb-6 leading-tight">
@@ -334,10 +368,7 @@ const Auth = () => {
             <div className="w-full max-w-md">
               {/* Mobile Logo */}
               <Link to="/" className="flex lg:hidden items-center justify-center gap-2 mb-8">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                  <span className="text-xl font-bold text-primary-foreground">T</span>
-                </div>
-                <span className="text-2xl font-bold text-foreground">ThemeVN</span>
+                <img src={logoImage} alt="ThemeVN" className="h-12 w-auto" />
               </Link>
 
               <AuthCard>
@@ -380,15 +411,54 @@ const Auth = () => {
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                 <Input
                                   id="login-password"
-                                  type="password"
+                                  type={showPassword ? "text" : "password"}
                                   placeholder="••••••••"
                                   value={password}
                                   onChange={(e) => setPassword(e.target.value)}
-                                  className="pl-10 bg-background/50"
+                                  className="pl-10 pr-10 bg-background/50"
                                   required
                                 />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                >
+                                  {showPassword ? (
+                                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <Eye className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </Button>
                               </div>
                             </div>
+                            
+                            {/* Remember Me Checkbox */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  id="remember-me"
+                                  checked={rememberMe}
+                                  onCheckedChange={(checked) => handleRememberMe(checked as boolean)}
+                                />
+                                <Label
+                                  htmlFor="remember-me"
+                                  className="text-sm font-normal cursor-pointer text-muted-foreground"
+                                >
+                                  Ghi nhớ đăng nhập
+                                </Label>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="link"
+                                className="p-0 h-auto text-sm text-muted-foreground hover:text-primary"
+                                onClick={() => setShowForgotPassword(true)}
+                              >
+                                Quên mật khẩu?
+                              </Button>
+                            </div>
+                            
                             <Button type="submit" className="w-full h-11" disabled={loading}>
                               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                               Đăng nhập
@@ -412,14 +482,6 @@ const Auth = () => {
                               Đăng nhập bằng OTP Email
                             </Button>
                           </form>
-
-                          <Button
-                            variant="link"
-                            className="w-full text-muted-foreground"
-                            onClick={() => setShowForgotPassword(true)}
-                          >
-                            Quên mật khẩu?
-                          </Button>
                         </>
                       ) : (
                         <div className="space-y-4">
@@ -504,33 +566,79 @@ const Auth = () => {
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="signup-password">Mật khẩu</Label>
+                          <div className="flex items-center justify-between">
+                            <Label htmlFor="signup-password">Mật khẩu</Label>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-auto p-0 text-xs text-primary hover:text-primary/80"
+                              onClick={() => setShowPasswordGenerator(!showPasswordGenerator)}
+                            >
+                              <Wand2 className="h-3 w-3 mr-1" />
+                              Tạo mật khẩu mạnh
+                            </Button>
+                          </div>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                             <Input
                               id="signup-password"
-                              type="password"
+                              type={showPassword ? "text" : "password"}
                               placeholder="••••••••"
                               value={password}
                               onChange={(e) => setPassword(e.target.value)}
-                              className="pl-10 bg-background/50"
+                              className="pl-10 pr-10 bg-background/50"
                               required
                             />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
                           </div>
                         </div>
+                        
+                        {/* Password Generator */}
+                        <Collapsible open={showPasswordGenerator} onOpenChange={setShowPasswordGenerator}>
+                          <CollapsibleContent>
+                            <PasswordGenerator onSelect={handlePasswordGenerated} />
+                          </CollapsibleContent>
+                        </Collapsible>
+                        
                         <div className="space-y-2">
                           <Label htmlFor="signup-confirm">Xác nhận mật khẩu</Label>
                           <div className="relative">
                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                             <Input
                               id="signup-confirm"
-                              type="password"
+                              type={showConfirmPassword ? "text" : "password"}
                               placeholder="••••••••"
                               value={confirmPassword}
                               onChange={(e) => setConfirmPassword(e.target.value)}
-                              className="pl-10 bg-background/50"
+                              className="pl-10 pr-10 bg-background/50"
                               required
                             />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                              {showConfirmPassword ? (
+                                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-muted-foreground" />
+                              )}
+                            </Button>
                           </div>
                         </div>
                         <Button type="submit" className="w-full h-11" disabled={loading}>
