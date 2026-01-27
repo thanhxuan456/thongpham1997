@@ -30,7 +30,7 @@ const features = [
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { user, signUp, signInWithOtp, verifyOtp, signInWithPassword, resetPassword } = useAuth();
+  const { user, signInWithPassword, resetPassword, sendOtpViaResend, verifyOtpViaResend } = useAuth();
   const { toast } = useToast();
   
   const [email, setEmail] = useState("");
@@ -41,6 +41,9 @@ const Auth = () => {
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [pendingSignupEmail, setPendingSignupEmail] = useState("");
+  const [pendingSignupPassword, setPendingSignupPassword] = useState("");
+  const [otpType, setOtpType] = useState<"login" | "signup" | "recovery">("login");
 
   useEffect(() => {
     if (user) {
@@ -48,6 +51,7 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
+  // Handle signup - send OTP first for verification
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -70,21 +74,26 @@ const Auth = () => {
     }
 
     setLoading(true);
-    const { error } = await signUp(email, password);
+    // Store credentials and send OTP for verification
+    setPendingSignupEmail(email);
+    setPendingSignupPassword(password);
+    
+    const { error } = await sendOtpViaResend(email, "signup");
     setLoading(false);
 
     if (error) {
       toast({
         variant: "destructive",
-        title: "Đăng ký thất bại",
+        title: "Gửi mã OTP thất bại",
         description: error.message,
       });
     } else {
+      setOtpType("signup");
+      setShowOtpInput(true);
       toast({
-        title: "Đăng ký thành công!",
+        title: "Đã gửi mã OTP!",
         description: "Vui lòng kiểm tra email để xác thực tài khoản.",
       });
-      setActiveTab("login");
     }
   };
 
@@ -108,10 +117,11 @@ const Auth = () => {
     }
   };
 
+  // Send OTP for login via Resend
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await signInWithOtp(email);
+    const { error } = await sendOtpViaResend(email, "login");
     setLoading(false);
 
     if (error) {
@@ -121,6 +131,7 @@ const Auth = () => {
         description: error.message,
       });
     } else {
+      setOtpType("login");
       setShowOtpInput(true);
       toast({
         title: "Đã gửi mã OTP",
@@ -129,11 +140,17 @@ const Auth = () => {
     }
   };
 
+  // Verify OTP via Resend
   const handleVerifyOtp = async () => {
     if (otpCode.length !== 6) return;
     
     setLoading(true);
-    const { error } = await verifyOtp(email, otpCode);
+    const { error, verified } = await verifyOtpViaResend(
+      otpType === "signup" ? pendingSignupEmail : email, 
+      otpCode, 
+      otpType,
+      otpType === "signup" ? pendingSignupPassword : undefined
+    );
     setLoading(false);
 
     if (error) {
@@ -142,10 +159,15 @@ const Auth = () => {
         title: "Xác thực OTP thất bại",
         description: error.message,
       });
-    } else {
+    } else if (verified) {
       toast({
-        title: "Đăng nhập thành công!",
+        title: otpType === "signup" ? "Đăng ký thành công!" : "Đăng nhập thành công!",
       });
+      // Reset state
+      setShowOtpInput(false);
+      setOtpCode("");
+      setPendingSignupEmail("");
+      setPendingSignupPassword("");
       navigate("/");
     }
   };
@@ -445,7 +467,16 @@ const Auth = () => {
                           </Button>
                           <Button
                             variant="link"
-                            onClick={handleSendOtp}
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              setLoading(true);
+                              await sendOtpViaResend(email, otpType);
+                              setLoading(false);
+                              toast({
+                                title: "Đã gửi lại mã OTP",
+                                description: "Vui lòng kiểm tra email của bạn.",
+                              });
+                            }}
                             className="w-full text-muted-foreground"
                             disabled={loading}
                           >
