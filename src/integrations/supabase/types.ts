@@ -376,6 +376,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_downloads: {
+        Row: {
+          created_at: string
+          download_count: number
+          download_url: string | null
+          expires_at: string | null
+          id: string
+          max_downloads: number | null
+          order_id: string | null
+          theme_id: string | null
+          theme_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          download_count?: number
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          max_downloads?: number | null
+          order_id?: string | null
+          theme_id?: string | null
+          theme_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          download_count?: number
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          max_downloads?: number | null
+          order_id?: string | null
+          theme_id?: string | null
+          theme_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_downloads_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_downloads_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -393,6 +450,42 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_info: string | null
+          id: string
+          ip_address: string | null
+          is_current: boolean
+          last_active_at: string
+          session_token: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          ip_address?: string | null
+          is_current?: boolean
+          last_active_at?: string
+          session_token: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_info?: string | null
+          id?: string
+          ip_address?: string | null
+          is_current?: boolean
+          last_active_at?: string
+          session_token?: string
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []

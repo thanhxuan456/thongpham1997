@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 import { Theme, CartItem } from "@/types/theme";
+import { trackAddToCart } from "@/components/AnalyticsProvider";
 
 interface CartContextType {
   items: CartItem[];
@@ -22,6 +23,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       if (existingItem) {
         return prev; // Already in cart
       }
+      
+      // Track add to cart event
+      trackAddToCart(theme.id, theme.name, theme.price);
+      
       return [...prev, { theme, quantity: 1 }];
     });
   };
