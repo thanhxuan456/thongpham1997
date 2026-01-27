@@ -218,7 +218,7 @@ const Auth = () => {
                   <div className="space-y-2">
                     <Label htmlFor="reset-email">Email</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <Input
                         id="reset-email"
                         type="email"
@@ -337,7 +337,7 @@ const Auth = () => {
                             <div className="space-y-2">
                               <Label htmlFor="login-email">Email</Label>
                               <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                 <Input
                                   id="login-email"
                                   type="email"
@@ -352,7 +352,7 @@ const Auth = () => {
                             <div className="space-y-2">
                               <Label htmlFor="login-password">Mật khẩu</Label>
                               <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                                 <Input
                                   id="login-password"
                                   type="password"
@@ -457,7 +457,7 @@ const Auth = () => {
                         <div className="space-y-2">
                           <Label htmlFor="signup-email">Email</Label>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                             <Input
                               id="signup-email"
                               type="email"
@@ -472,7 +472,7 @@ const Auth = () => {
                         <div className="space-y-2">
                           <Label htmlFor="signup-password">Mật khẩu</Label>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                             <Input
                               id="signup-password"
                               type="password"
@@ -487,7 +487,7 @@ const Auth = () => {
                         <div className="space-y-2">
                           <Label htmlFor="signup-confirm">Xác nhận mật khẩu</Label>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                             <Input
                               id="signup-confirm"
                               type="password"
