@@ -52,16 +52,28 @@ const Footer = () => {
                 Thư viện WordPress themes cao cấp hàng đầu Việt Nam. Chất lượng, uy tín và hỗ trợ tận tâm.
               </p>
               <div className="flex gap-3">
-                <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all border border-white/10">
+                <a 
+                  href="#" 
+                  className="social-icon-btn w-10 h-10 rounded-full flex items-center justify-center text-white/70 transition-all duration-300 border-2 border-transparent bg-white/10 backdrop-blur-sm hover:text-[#1877F2] hover:border-[#1877F2] hover:bg-[#1877F2]/10 hover:scale-110"
+                >
                   <Facebook className="h-5 w-5" />
                 </a>
-                <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all border border-white/10">
+                <a 
+                  href="#" 
+                  className="social-icon-btn w-10 h-10 rounded-full flex items-center justify-center text-white/70 transition-all duration-300 border-2 border-transparent bg-white/10 backdrop-blur-sm hover:text-[#1DA1F2] hover:border-[#1DA1F2] hover:bg-[#1DA1F2]/10 hover:scale-110"
+                >
                   <Twitter className="h-5 w-5" />
                 </a>
-                <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all border border-white/10">
+                <a 
+                  href="#" 
+                  className="social-icon-btn w-10 h-10 rounded-full flex items-center justify-center text-white/70 transition-all duration-300 border-2 border-transparent bg-white/10 backdrop-blur-sm hover:text-[#E4405F] hover:border-[#E4405F] hover:bg-[#E4405F]/10 hover:scale-110"
+                >
                   <Instagram className="h-5 w-5" />
                 </a>
-                <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-all border border-white/10">
+                <a 
+                  href="#" 
+                  className="social-icon-btn w-10 h-10 rounded-full flex items-center justify-center text-white/70 transition-all duration-300 border-2 border-transparent bg-white/10 backdrop-blur-sm hover:text-[#FF0000] hover:border-[#FF0000] hover:bg-[#FF0000]/10 hover:scale-110"
+                >
                   <Youtube className="h-5 w-5" />
                 </a>
               </div>
