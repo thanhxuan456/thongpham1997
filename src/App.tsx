@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import AnalyticsProvider from "@/components/AnalyticsProvider";
 import Index from "./pages/Index";
 import Checkout from "./pages/Checkout";
 import ThemePreview from "./pages/ThemePreview";
@@ -33,6 +34,7 @@ const App = () => (
       <TooltipProvider>
         <AuthProvider>
           <CartProvider>
+            <AnalyticsProvider />
             <Toaster />
             <Sonner />
             <BrowserRouter>
