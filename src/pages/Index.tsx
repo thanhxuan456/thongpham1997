@@ -91,10 +91,34 @@ const Index = () => {
   }, []);
 
   const features = [
-    { icon: Sparkles, title: "Thiết kế chuyên nghiệp", desc: "Themes được thiết kế bởi đội ngũ chuyên gia với tiêu chuẩn cao nhất." },
-    { icon: Zap, title: "Tối ưu tốc độ", desc: "Themes được tối ưu hóa để đạt điểm PageSpeed cao nhất và SEO tốt nhất." },
-    { icon: Shield, title: "Bảo mật cao", desc: "Code sạch, tuân thủ chuẩn WordPress và được cập nhật thường xuyên." },
-    { icon: HeadphonesIcon, title: "Hỗ trợ 24/7", desc: "Đội ngũ hỗ trợ kỹ thuật luôn sẵn sàng giúp đỡ bạn bất cứ lúc nào." },
+    { 
+      icon: Sparkles, 
+      title: "Thiết kế chuyên nghiệp", 
+      desc: "Themes được thiết kế bởi đội ngũ chuyên gia với tiêu chuẩn cao nhất.",
+      gradient: "from-purple-500 to-indigo-600",
+      shadowColor: "shadow-purple-500/30"
+    },
+    { 
+      icon: Zap, 
+      title: "Tối ưu tốc độ", 
+      desc: "Themes được tối ưu hóa để đạt điểm PageSpeed cao nhất và SEO tốt nhất.",
+      gradient: "from-cyan-500 to-blue-600",
+      shadowColor: "shadow-cyan-500/30"
+    },
+    { 
+      icon: Shield, 
+      title: "Bảo mật cao", 
+      desc: "Code sạch, tuân thủ chuẩn WordPress và được cập nhật thường xuyên.",
+      gradient: "from-violet-500 to-purple-600",
+      shadowColor: "shadow-violet-500/30"
+    },
+    { 
+      icon: HeadphonesIcon, 
+      title: "Hỗ trợ 24/7", 
+      desc: "Đội ngũ hỗ trợ kỹ thuật luôn sẵn sàng giúp đỡ bạn bất cứ lúc nào.",
+      gradient: "from-orange-500 to-amber-500",
+      shadowColor: "shadow-orange-500/30"
+    },
   ];
 
   // Partner logos for marquee
@@ -147,35 +171,38 @@ const Index = () => {
         <FeaturedCarousel onPreview={setPreviewTheme} />
 
         {/* Features Section */}
-        <section className="py-20 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-secondary/30 to-background" />
-          <div className="absolute top-20 left-[10%] w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-[10%] w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
+        <section className="py-24 relative overflow-hidden">
+          {/* Background decorations */}
+          <div className="absolute inset-0 bg-gradient-to-b from-secondary/50 via-secondary/30 to-background" />
+          <div className="absolute top-10 left-[5%] w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-10 right-[5%] w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
 
           <div className="container mx-auto px-4 relative z-10">
             <AnimatedSection animation="fade-up" className="text-center mb-16">
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full text-primary text-sm font-medium mb-4">
+              <span className="inline-flex items-center gap-2 px-5 py-2 bg-primary/10 backdrop-blur-sm rounded-full text-primary text-sm font-semibold mb-6 border border-primary/20">
                 Tại sao chọn chúng tôi?
               </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                Trải nghiệm <span className="gradient-text">tốt nhất</span> cho bạn
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+                Trải nghiệm <span className="gradient-text italic">tốt nhất</span> cho bạn
               </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Chúng tôi cam kết mang đến những giá trị tốt nhất cho khách hàng
               </p>
             </AnimatedSection>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {features.map((feature, index) => (
                 <AnimatedSection key={feature.title} animation="fade-up" delay={index * 100}>
-                  <div className="bg-card p-6 rounded-2xl card-shadow text-center group hover:card-shadow-hover transition-all duration-300 hover:-translate-y-2 border border-border/50">
-                    <div className="w-14 h-14 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-primary/20">
-                      <feature.icon className="h-7 w-7 text-primary-foreground" />
+                  <div className="bg-card/80 backdrop-blur-sm p-8 rounded-3xl text-center group hover:bg-card transition-all duration-500 hover:-translate-y-3 border border-border/50 hover:border-primary/20 hover:shadow-2xl hover:shadow-primary/10">
+                    {/* Colorful Icon Container */}
+                    <div className={`w-16 h-16 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-xl ${feature.shadowColor}`}>
+                      <feature.icon className="h-8 w-8 text-white" />
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                    <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-300">
                       {feature.title}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground leading-relaxed">
                       {feature.desc}
                     </p>
                   </div>
