@@ -16,6 +16,7 @@ import Blog from "./pages/Blog";
 import Policy from "./pages/Policy";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -48,6 +49,7 @@ const App = () => (
                 <Route path="/policy" element={<Policy />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/profile" element={<Profile />} />
                 {/* Admin Routes */}
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<AdminUsers />} />

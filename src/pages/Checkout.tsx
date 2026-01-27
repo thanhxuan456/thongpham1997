@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, CreditCard, Shield, Check, Lock, Truck, Gift, ChevronRight, Sparkles, Tag, X, Loader2, QrCode, Copy, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import AnimatedSection from "@/components/AnimatedSection";
 import WaveDivider from "@/components/WaveDivider";
 import { supabase } from "@/integrations/supabase/client";
-
+import { trackPurchase } from "@/components/AnalyticsProvider";
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -33,6 +34,7 @@ interface BankSettings {
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, getTotalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -45,6 +47,13 @@ const Checkout = () => {
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [bankSettings, setBankSettings] = useState<BankSettings | null>(null);
   const [copied, setCopied] = useState(false);
+
+  // Pre-fill email if user is logged in
+  useEffect(() => {
+    if (user?.email && !formData.email) {
+      setFormData(prev => ({ ...prev, email: user.email || "" }));
+    }
+  }, [user]);
 
   // Fetch bank settings
   useEffect(() => {
@@ -225,31 +234,88 @@ const Checkout = () => {
     setIsProcessing(true);
 
     try {
+      // Create order in database
+      const { data: orderData, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          user_id: user?.id || null,
+          user_email: formData.email,
+          total_amount: finalTotal,
+          payment_method: paymentMethod,
+          status: "pending",
+          notes: `Họ tên: ${formData.fullName}, SĐT: ${formData.phone}`,
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = items.map((item) => ({
+        order_id: orderData.id,
+        theme_id: item.theme.id,
+        theme_name: item.theme.name,
+        price: item.theme.price,
+        quantity: item.quantity,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Create download records for logged in users
+      if (user) {
+        const downloads = items.map((item) => ({
+          user_id: user.id,
+          order_id: orderData.id,
+          theme_id: item.theme.id,
+          theme_name: item.theme.name,
+          download_count: 0,
+          max_downloads: 5,
+        }));
+
+        await supabase.from("user_downloads").insert(downloads);
+      }
+
       // If coupon was applied, increment used_count
       if (appliedCoupon) {
-        const { error: couponError } = await supabase
+        const { data: couponData } = await supabase
           .from("coupons")
-          .update({ used_count: (await supabase.from("coupons").select("used_count").eq("id", appliedCoupon.id).single()).data?.used_count + 1 || 1 })
-          .eq("id", appliedCoupon.id);
+          .select("used_count")
+          .eq("id", appliedCoupon.id)
+          .single();
         
-        if (couponError) {
-          console.log("Note: Could not increment coupon usage", couponError);
+        if (couponData) {
+          await supabase
+            .from("coupons")
+            .update({ used_count: (couponData.used_count || 0) + 1 })
+            .eq("id", appliedCoupon.id);
         }
       }
-      
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Track purchase event for analytics
+      trackPurchase(orderData.id, finalTotal, "VND");
       
       clearCart();
       setIsProcessing(false);
       
       toast({
         title: "Đặt hàng thành công! 🎉",
-        description: "Cảm ơn bạn đã mua hàng. Chúng tôi sẽ gửi themes qua email.",
+        description: user 
+          ? "Chuyển đến trang tải xuống themes của bạn." 
+          : "Cảm ơn bạn đã mua hàng. Chúng tôi sẽ gửi themes qua email.",
       });
       
-      navigate("/");
+      // Redirect based on login status
+      if (user) {
+        navigate("/profile");
+      } else {
+        navigate("/");
+      }
     } catch (error) {
+      console.error("Checkout error:", error);
       setIsProcessing(false);
       toast({
         title: "Lỗi",

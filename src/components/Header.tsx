@@ -1,4 +1,4 @@
-import { ShoppingCart, Search, Menu, X, Sun, Moon, Home, Info, HeadphonesIcon, Newspaper, User, LogOut, Shield } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, Sun, Moon, Home, Info, HeadphonesIcon, Newspaper, User, LogOut, Shield, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface HeaderProps {
-  onCartClick: () => void;
+  onCartClick?: () => void;
   onSearch?: (query: string) => void;
   searchQuery?: string;
 }
@@ -234,17 +234,24 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
                     <p className="text-sm font-medium truncate">{user.email}</p>
                   </div>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="cursor-pointer">
+                      <Download className="h-4 w-4 mr-2" />
+                      Tài khoản & Downloads
+                    </Link>
+                  </DropdownMenuItem>
                   {isAdmin && (
                     <>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link to="/admin" className="cursor-pointer">
                           <Shield className="h-4 w-4 mr-2" />
                           Admin Panel
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
                     </>
                   )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => signOut()} className="text-destructive cursor-pointer">
                     <LogOut className="h-4 w-4 mr-2" />
                     Đăng xuất
