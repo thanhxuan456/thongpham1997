@@ -87,6 +87,17 @@ const Index = () => {
     { icon: HeadphonesIcon, title: "Hỗ trợ 24/7", desc: "Đội ngũ hỗ trợ kỹ thuật luôn sẵn sàng giúp đỡ bạn bất cứ lúc nào." },
   ];
 
+  // Partner logos for marquee
+  const partners = [
+    "Starter Theme", "WooCommerce", "Elementor", "Starter Theme", "AstraTheme", 
+    "Developer+", "ThemeForest", "CreativeMarket", "TemplateMonster", "Starter Theme"
+  ];
+  
+  const partners2 = [
+    "Developer Hub", "Developer+", "Developer Hub", "Developer+", "Developer Hub",
+    "Developer+", "Developer Hub", "Developer+", "Developer Hub", "Developer+"
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       {/* Top Coupon Banner */}
@@ -225,56 +236,51 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Stats Section */}
-        <section className="py-20">
-          <div className="container mx-auto px-4">
-            <div className="relative rounded-3xl overflow-hidden">
-              {/* Beautiful gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-r from-primary via-[hsl(var(--primary)/0.9)] to-accent" />
-              
-              {/* Subtle pattern overlay */}
-              <div className="absolute inset-0 opacity-[0.03]" style={{
-                backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-                backgroundSize: '32px 32px'
-              }} />
-              
-              {/* Decorative circles */}
-              <div className="absolute -top-20 -left-20 w-64 h-64 bg-white/5 rounded-full blur-2xl" />
-              <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-2xl" />
-              <div className="absolute top-1/2 left-1/3 -translate-y-1/2 w-40 h-40 bg-white/5 rounded-full blur-xl" />
+        {/* Partners Logo Section */}
+        <section className="py-16 overflow-hidden bg-secondary/30">
+          <div className="container mx-auto px-4 mb-10">
+            <AnimatedSection animation="fade-up" className="text-center">
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full text-primary text-sm font-medium mb-4">
+                🤝 Đối tác tin cậy
+              </span>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                Được tin dùng bởi <span className="gradient-text">hàng nghìn</span> doanh nghiệp
+              </h2>
+            </AnimatedSection>
+          </div>
 
-              <div className="relative z-10 p-10 md:p-16 lg:p-20">
-                {/* Header with elegant typography */}
-                <AnimatedSection animation="fade-up" className="text-center mb-14">
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 italic tracking-tight">
-                    Được tin dùng bởi hàng nghìn khách hàng
-                  </h2>
-                  <p className="text-white/70 text-lg max-w-2xl mx-auto">
-                    Hãy tham gia cùng cộng đồng những người đã thành công với ThemeVN
-                  </p>
-                </AnimatedSection>
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
-                  {[
-                    { value: "1000+", label: "Premium Themes" },
-                    { value: "50K+", label: "Khách hàng" },
-                    { value: "99%", label: "Hài lòng" },
-                    { value: "24/7", label: "Hỗ trợ" },
-                  ].map((stat, index) => (
-                    <AnimatedSection key={stat.label} animation="zoom" delay={index * 100}>
-                      <div className="text-center group">
-                        <div className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-3 tracking-tight transition-transform duration-300 group-hover:scale-105">
-                          {stat.value}
-                        </div>
-                        <div className="text-white/60 text-sm md:text-base font-medium uppercase tracking-wider">
-                          {stat.label}
-                        </div>
-                      </div>
-                    </AnimatedSection>
-                  ))}
+          {/* Infinite Scrolling Logos */}
+          <div className="relative">
+            {/* Gradient fade edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-secondary/30 to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-secondary/30 to-transparent z-10 pointer-events-none" />
+            
+            {/* First row - scrolling left */}
+            <div className="flex gap-12 animate-marquee mb-8">
+              {[...partners, ...partners].map((partner, index) => (
+                <div
+                  key={`row1-${index}`}
+                  className="flex-shrink-0 h-12 px-8 flex items-center justify-center bg-card rounded-xl border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg group"
+                >
+                  <span className="text-xl font-bold text-muted-foreground/60 group-hover:text-primary transition-colors duration-300 whitespace-nowrap">
+                    {partner}
+                  </span>
                 </div>
-              </div>
+              ))}
+            </div>
+
+            {/* Second row - scrolling right */}
+            <div className="flex gap-12 animate-marquee-reverse">
+              {[...partners2, ...partners2].map((partner, index) => (
+                <div
+                  key={`row2-${index}`}
+                  className="flex-shrink-0 h-12 px-8 flex items-center justify-center bg-card rounded-xl border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg group"
+                >
+                  <span className="text-xl font-bold text-muted-foreground/60 group-hover:text-primary transition-colors duration-300 whitespace-nowrap">
+                    {partner}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </section>
