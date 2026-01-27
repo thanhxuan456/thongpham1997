@@ -2,6 +2,8 @@ import { Star, ShoppingCart, Eye, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Theme } from "@/types/theme";
 import { useCart } from "@/contexts/CartContext";
+import { useRef } from "react";
+import { useElementParallax } from "@/hooks/use-parallax";
 
 interface ThemeCardProps {
   theme: Theme;
@@ -43,13 +45,21 @@ const HighlightText = ({ text, query }: { text: string; query?: string }) => {
 const ThemeCard = ({ theme, onPreview, searchQuery }: ThemeCardProps) => {
   const { addToCart, isInCart } = useCart();
   const inCart = isInCart(theme.id);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { offset, isInView } = useElementParallax(cardRef, 0.03);
 
   const discount = theme.originalPrice
     ? Math.round(((theme.originalPrice - theme.price) / theme.originalPrice) * 100)
     : 0;
 
   return (
-    <div className="group bg-card rounded-2xl border border-border overflow-hidden card-shadow hover:card-shadow-hover transition-all duration-300 hover:-translate-y-1">
+    <div 
+      ref={cardRef}
+      className="group bg-card rounded-2xl border border-border overflow-hidden card-shadow hover:card-shadow-hover transition-all duration-300 hover:-translate-y-2 hover:border-primary/20"
+      style={{
+        transform: isInView ? `translateY(${offset}px)` : undefined,
+      }}
+    >
       {/* Image container */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
