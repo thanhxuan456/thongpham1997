@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { MessageCircle, X, Send, Loader2, Phone, Mail, User, Ticket, ArrowLeft } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Phone, Mail, User, Ticket, ArrowLeft, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +15,7 @@ interface Message {
   is_read: boolean;
 }
 
-interface Ticket {
+interface TicketType {
   id: string;
   subject: string;
   status: string;
@@ -25,10 +25,14 @@ interface Ticket {
 const ChatWidget = () => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [showRating, setShowRating] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [hasRated, setHasRated] = useState(false);
   const [view, setView] = useState<"menu" | "chat" | "tickets" | "create-ticket">("menu");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [currentTicket, setCurrentTicket] = useState<Ticket | null>(null);
+  const [tickets, setTickets] = useState<TicketType[]>([]);
+  const [currentTicket, setCurrentTicket] = useState<TicketType | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -206,15 +210,98 @@ const ChatWidget = () => {
     }
   };
 
+  const handleToggleChat = () => {
+    if (isOpen) {
+      // Closing chat - show rating if not already rated
+      setIsOpen(false);
+      if (!hasRated) {
+        setShowRating(true);
+      }
+    } else {
+      // Opening chat
+      setIsOpen(true);
+      setShowRating(false);
+    }
+  };
+
+  const handleRate = (stars: number) => {
+    setRating(stars);
+    setHasRated(true);
+    toast.success(`Cảm ơn bạn đã đánh giá ${stars} sao! ⭐`);
+    
+    // Auto close rating after 1.5s
+    setTimeout(() => {
+      setShowRating(false);
+      setRating(0);
+    }, 1500);
+  };
+
+  const closeRating = () => {
+    setShowRating(false);
+    setRating(0);
+  };
+
   return (
     <>
+      {/* Rating popup */}
+      {showRating && (
+        <div className="fixed bottom-20 right-6 z-50 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl p-4 w-64">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-foreground text-sm">Đánh giá hỗ trợ</h4>
+              <button 
+                onClick={closeRating}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Bạn có hài lòng với dịch vụ của chúng tôi không?
+            </p>
+            <div className="flex justify-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => handleRate(star)}
+                  onMouseEnter={() => setHoveredRating(star)}
+                  onMouseLeave={() => setHoveredRating(0)}
+                  className="p-1 transition-transform hover:scale-125"
+                >
+                  <Star 
+                    className={`h-7 w-7 transition-colors ${
+                      star <= (hoveredRating || rating)
+                        ? "text-yellow-400 fill-yellow-400"
+                        : "text-muted-foreground"
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+            {rating > 0 && (
+              <p className="text-center text-sm text-green-500 mt-3 animate-in fade-in">
+                Cảm ơn bạn! ❤️
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Chat button */}
       <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-6 z-50 w-14 h-14 gradient-bg rounded-full shadow-2xl shadow-primary/30 flex items-center justify-center group hover:scale-110 transition-transform"
+        onClick={handleToggleChat}
+        className={`fixed bottom-20 right-6 z-50 w-14 h-14 rounded-full shadow-2xl shadow-primary/30 flex items-center justify-center group transition-all duration-300 ${
+          isOpen 
+            ? "bg-destructive hover:bg-destructive/90 rotate-90" 
+            : "gradient-bg hover:scale-110"
+        }`}
       >
-        <MessageCircle className="h-6 w-6 text-primary-foreground group-hover:scale-110 transition-transform" />
-        {unreadCount > 0 && (
+        {isOpen ? (
+          <X className="h-6 w-6 text-destructive-foreground transition-transform" />
+        ) : (
+          <MessageCircle className="h-6 w-6 text-primary-foreground group-hover:scale-110 transition-transform" />
+        )}
+        {!isOpen && unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
             {unreadCount}
           </span>
@@ -259,7 +346,7 @@ const ChatWidget = () => {
               variant="ghost"
               size="icon"
               className="text-primary-foreground hover:bg-white/20"
-              onClick={() => setIsOpen(false)}
+              onClick={handleToggleChat}
             >
               <X className="h-5 w-5" />
             </Button>
