@@ -11,6 +11,22 @@ interface ResetPasswordRequest {
   newPassword: string;
 }
 
+// Helper function to get user by email using profiles table (indexed)
+async function getUserByEmail(supabase: any, email: string) {
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("email", email)
+    .maybeSingle();
+  
+  if (profile?.user_id) {
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(profile.user_id);
+    return { user: userData?.user, error: userError };
+  }
+  
+  return { user: null, error: null };
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -31,17 +47,10 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find the user by email
-    const { data: users, error: listError } = await supabase.auth.admin.listUsers();
-    
-    if (listError) {
-      console.error("Error listing users:", listError);
-      throw new Error("Failed to find user");
-    }
+    // Find the user by email using profiles table (indexed lookup - more efficient)
+    const { user, error: getUserError } = await getUserByEmail(supabase, email);
 
-    const user = users?.users?.find(u => u.email === email);
-
-    if (!user) {
+    if (getUserError || !user) {
       return new Response(
         JSON.stringify({ error: "Tài khoản không tồn tại" }),
         {
