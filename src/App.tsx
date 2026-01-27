@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminThemes from "./pages/admin/AdminThemes";
+import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminSettings from "./pages/admin/AdminSettings";
 
@@ -47,6 +48,7 @@ const App = () => (
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<AdminUsers />} />
                 <Route path="/admin/themes" element={<AdminThemes />} />
+                <Route path="/admin/coupons" element={<AdminCoupons />} />
                 <Route path="/admin/orders" element={<AdminOrders />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -6,7 +6,8 @@ import {
   ShoppingCart, 
   Settings,
   ChevronLeft,
-  LogOut
+  LogOut,
+  Tag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +22,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
   { icon: Users, label: "Quản lý Users", path: "/admin/users" },
   { icon: Palette, label: "Quản lý Themes", path: "/admin/themes" },
+  { icon: Tag, label: "Mã giảm giá", path: "/admin/coupons" },
   { icon: ShoppingCart, label: "Quản lý Đơn hàng", path: "/admin/orders" },
   { icon: Settings, label: "Cài đặt", path: "/admin/settings" },
 ];
