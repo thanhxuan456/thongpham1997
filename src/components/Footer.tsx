@@ -45,6 +45,16 @@ const Footer = () => {
           title: "Đăng ký thành công! 🎉",
           description: "Cảm ơn bạn đã đăng ký nhận tin từ ThemeVN!",
         });
+        
+        // Send welcome email
+        try {
+          await supabase.functions.invoke("send-subscriber-email", {
+            body: { email: email.trim().toLowerCase(), template: "welcome-subscriber" }
+          });
+        } catch (emailError) {
+          console.error("Could not send welcome email:", emailError);
+        }
+        
         setEmail("");
         
         // Reset success state after 5 seconds

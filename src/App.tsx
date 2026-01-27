@@ -30,6 +30,7 @@ import AdminMenus from "./pages/admin/AdminMenus";
 import AdminEmails from "./pages/admin/AdminEmails";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminSupport from "./pages/admin/AdminSupport";
+import AdminSubscribers from "./pages/admin/AdminSubscribers";
 import ChatWidget from "./components/ChatWidget";
 
 const queryClient = new QueryClient();
@@ -74,7 +75,7 @@ const App = () => {
                   <Route path="/admin/orders" element={<AdminOrders />} />
                   <Route path="/admin/menus" element={<AdminMenus />} />
                   <Route path="/admin/emails" element={<AdminEmails />} />
-                  <Route path="/admin/emails" element={<AdminEmails />} />
+                  <Route path="/admin/subscribers" element={<AdminSubscribers />} />
                   <Route path="/admin/support" element={<AdminSupport />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
