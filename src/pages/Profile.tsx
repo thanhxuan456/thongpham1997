@@ -270,7 +270,7 @@ const Profile = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="container mx-auto px-4 py-8 pt-24">
+      <main className="container mx-auto px-4 py-6 pt-20">
         {/* Profile Header */}
         <AnimatedSection animation="fade-up">
           <Card className="mb-8 overflow-hidden">
