@@ -1,8 +1,9 @@
-import { ShoppingCart, Search, Menu, X, Sun, Moon, Home, Info, HeadphonesIcon, Newspaper, User, LogOut } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, Sun, Moon, Home, Info, HeadphonesIcon, Newspaper, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdmin } from "@/hooks/useAdmin";
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import MegaMenu from "./MegaMenu";
@@ -24,6 +25,7 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
   const { getTotalItems } = useCart();
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
@@ -232,6 +234,17 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
                     <p className="text-sm font-medium truncate">{user.email}</p>
                   </div>
                   <DropdownMenuSeparator />
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="cursor-pointer">
+                          <Shield className="h-4 w-4 mr-2" />
+                          Admin Panel
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem onClick={() => signOut()} className="text-destructive cursor-pointer">
                     <LogOut className="h-4 w-4 mr-2" />
                     Đăng xuất
