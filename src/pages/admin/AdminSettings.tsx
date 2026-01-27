@@ -34,11 +34,38 @@ import {
   Key,
   Eye,
   EyeOff,
-  Loader2
+  Loader2,
+  QrCode
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Vietnam banks list for VietQR
+const vietnamBanks = [
+  { code: "VCB", shortName: "Vietcombank", name: "Ngân hàng TMCP Ngoại Thương Việt Nam" },
+  { code: "TCB", shortName: "Techcombank", name: "Ngân hàng TMCP Kỹ Thương Việt Nam" },
+  { code: "MB", shortName: "MB Bank", name: "Ngân hàng TMCP Quân Đội" },
+  { code: "VPB", shortName: "VPBank", name: "Ngân hàng TMCP Việt Nam Thịnh Vượng" },
+  { code: "ACB", shortName: "ACB", name: "Ngân hàng TMCP Á Châu" },
+  { code: "TPB", shortName: "TPBank", name: "Ngân hàng TMCP Tiên Phong" },
+  { code: "STB", shortName: "Sacombank", name: "Ngân hàng TMCP Sài Gòn Thương Tín" },
+  { code: "HDB", shortName: "HDBank", name: "Ngân hàng TMCP Phát Triển TP.HCM" },
+  { code: "VIB", shortName: "VIB", name: "Ngân hàng TMCP Quốc Tế Việt Nam" },
+  { code: "SHB", shortName: "SHB", name: "Ngân hàng TMCP Sài Gòn - Hà Nội" },
+  { code: "EIB", shortName: "Eximbank", name: "Ngân hàng TMCP Xuất Nhập Khẩu" },
+  { code: "MSB", shortName: "MSB", name: "Ngân hàng TMCP Hàng Hải" },
+  { code: "OCB", shortName: "OCB", name: "Ngân hàng TMCP Phương Đông" },
+  { code: "LPB", shortName: "LienVietPostBank", name: "Ngân hàng TMCP Bưu Điện Liên Việt" },
+  { code: "BIDV", shortName: "BIDV", name: "Ngân hàng TMCP Đầu Tư & Phát Triển" },
+  { code: "CTG", shortName: "VietinBank", name: "Ngân hàng TMCP Công Thương Việt Nam" },
+  { code: "AGR", shortName: "Agribank", name: "Ngân hàng Nông nghiệp & PTNT Việt Nam" },
+  { code: "SCB", shortName: "SCB", name: "Ngân hàng TMCP Sài Gòn" },
+  { code: "NAB", shortName: "Nam A Bank", name: "Ngân hàng TMCP Nam Á" },
+  { code: "BAB", shortName: "Bac A Bank", name: "Ngân hàng TMCP Bắc Á" },
+  { code: "CAKE", shortName: "CAKE", name: "Ngân hàng Số CAKE by VPBank" },
+  { code: "Ubank", shortName: "Ubank", name: "Ngân hàng số Ubank by VPBank" },
+];
 
 interface Setting {
   id: string;
@@ -781,33 +808,107 @@ const AdminSettings = () => {
               </CardContent>
             </Card>
 
-            {/* Bank Account Info */}
+            {/* Bank Account Info with VietQR */}
             <Card className="border-border/50">
               <CardHeader>
-                <CardTitle>Thông tin tài khoản ngân hàng</CardTitle>
+                <CardTitle>Thông tin tài khoản ngân hàng & VietQR</CardTitle>
                 <CardDescription>
-                  Thông tin tài khoản nhận thanh toán
+                  Thông tin tài khoản nhận thanh toán - Tự động tạo mã QR
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Tên ngân hàng</Label>
-                    <Input placeholder="Vietcombank" />
+                    <Label>Ngân hàng *</Label>
+                    <Select 
+                      value={formValues['BANK_CODE'] || ''} 
+                      onValueChange={(value) => {
+                        updateFormValue('BANK_CODE', value);
+                        // Auto-set bank name
+                        const bank = vietnamBanks.find(b => b.code === value);
+                        if (bank) updateFormValue('BANK_NAME', bank.name);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn ngân hàng" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vietnamBanks.map((bank) => (
+                          <SelectItem key={bank.code} value={bank.code}>
+                            <div className="flex items-center gap-2">
+                              <span>{bank.shortName}</span>
+                              <span className="text-muted-foreground text-xs">({bank.name})</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Số tài khoản</Label>
-                    <Input placeholder="1234567890" />
+                    <Label>Số tài khoản *</Label>
+                    <Input 
+                      value={formValues['BANK_ACCOUNT_NUMBER'] || ''}
+                      onChange={(e) => updateFormValue('BANK_ACCOUNT_NUMBER', e.target.value)}
+                      placeholder="1234567890"
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label>Tên chủ tài khoản</Label>
-                    <Input placeholder="NGUYEN VAN A" />
+                    <Label>Tên chủ tài khoản *</Label>
+                    <Input 
+                      value={formValues['BANK_ACCOUNT_NAME'] || ''}
+                      onChange={(e) => updateFormValue('BANK_ACCOUNT_NAME', e.target.value.toUpperCase())}
+                      placeholder="NGUYEN VAN A"
+                      className="uppercase"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Chi nhánh</Label>
-                    <Input placeholder="Chi nhánh TP.HCM" />
+                    <Input 
+                      value={formValues['BANK_BRANCH'] || ''}
+                      onChange={(e) => updateFormValue('BANK_BRANCH', e.target.value)}
+                      placeholder="Chi nhánh TP.HCM"
+                    />
                   </div>
                 </div>
+
+                {/* VietQR Preview */}
+                {formValues['BANK_CODE'] && formValues['BANK_ACCOUNT_NUMBER'] && (
+                  <div className="mt-6 p-6 rounded-lg border border-border/50 bg-muted/30">
+                    <h4 className="font-semibold mb-4 flex items-center gap-2">
+                      <QrCode className="h-5 w-5 text-primary" />
+                      Preview mã QR thanh toán
+                    </h4>
+                    <div className="flex flex-col md:flex-row gap-6 items-start">
+                      <div className="bg-white p-4 rounded-lg shadow-sm">
+                        <img 
+                          src={`https://img.vietqr.io/image/${formValues['BANK_CODE']}-${formValues['BANK_ACCOUNT_NUMBER']}-compact2.png?amount=100000&addInfo=Thanh%20toan%20don%20hang&accountName=${encodeURIComponent(formValues['BANK_ACCOUNT_NAME'] || 'ACCOUNT')}`}
+                          alt="VietQR Preview"
+                          className="w-48 h-48 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://img.vietqr.io/image/VCB-1234567890-compact2.png';
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <div className="p-3 rounded bg-card border border-border/50">
+                          <p className="text-sm text-muted-foreground">Ngân hàng</p>
+                          <p className="font-medium">{formValues['BANK_NAME'] || vietnamBanks.find(b => b.code === formValues['BANK_CODE'])?.name}</p>
+                        </div>
+                        <div className="p-3 rounded bg-card border border-border/50">
+                          <p className="text-sm text-muted-foreground">Số tài khoản</p>
+                          <p className="font-medium font-mono">{formValues['BANK_ACCOUNT_NUMBER']}</p>
+                        </div>
+                        <div className="p-3 rounded bg-card border border-border/50">
+                          <p className="text-sm text-muted-foreground">Chủ tài khoản</p>
+                          <p className="font-medium">{formValues['BANK_ACCOUNT_NAME'] || '—'}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          * Mã QR sẽ tự động hiển thị số tiền và nội dung chuyển khoản tại trang checkout
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

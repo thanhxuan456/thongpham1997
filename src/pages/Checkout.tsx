@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CreditCard, Shield, Check, Lock, Truck, Gift, ChevronRight, Sparkles, Tag, X, Loader2 } from "lucide-react";
+import { ArrowLeft, CreditCard, Shield, Check, Lock, Truck, Gift, ChevronRight, Sparkles, Tag, X, Loader2, QrCode, Copy, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "@/hooks/use-toast";
@@ -23,6 +23,13 @@ interface AppliedCoupon {
   max_discount_amount: number | null;
 }
 
+interface BankSettings {
+  bankCode: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+}
+
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, getTotalPrice, clearCart } = useCart();
@@ -36,6 +43,36 @@ const Checkout = () => {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [bankSettings, setBankSettings] = useState<BankSettings | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // Fetch bank settings
+  useEffect(() => {
+    const fetchBankSettings = async () => {
+      const { data, error } = await supabase
+        .from("settings")
+        .select("key, value")
+        .in("key", ["BANK_CODE", "BANK_NAME", "BANK_ACCOUNT_NUMBER", "BANK_ACCOUNT_NAME"]);
+
+      if (!error && data) {
+        const settings: Record<string, string> = {};
+        data.forEach((s) => {
+          settings[s.key] = s.value || "";
+        });
+        
+        if (settings.BANK_CODE && settings.BANK_ACCOUNT_NUMBER) {
+          setBankSettings({
+            bankCode: settings.BANK_CODE,
+            bankName: settings.BANK_NAME,
+            accountNumber: settings.BANK_ACCOUNT_NUMBER,
+            accountName: settings.BANK_ACCOUNT_NAME,
+          });
+        }
+      }
+    };
+
+    fetchBankSettings();
+  }, []);
 
   const subtotal = getTotalPrice();
   
@@ -430,28 +467,89 @@ const Checkout = () => {
 
                     {paymentMethod === "transfer" && (
                       <div className="p-5 bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl border border-primary/20">
-                        <p className="font-medium text-foreground mb-3 flex items-center gap-2">
-                          <Sparkles className="h-4 w-4 text-primary" />
-                          Thông tin chuyển khoản
+                        <p className="font-medium text-foreground mb-4 flex items-center gap-2">
+                          <QrCode className="h-4 w-4 text-primary" />
+                          Quét mã QR để thanh toán
                         </p>
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Ngân hàng:</span>
-                            <p className="font-medium text-foreground">Vietcombank</p>
+                        
+                        {bankSettings ? (
+                          <div className="flex flex-col md:flex-row gap-6">
+                            {/* VietQR Code */}
+                            <div className="flex-shrink-0">
+                              <div className="bg-white p-3 rounded-lg shadow-sm inline-block">
+                                <img 
+                                  src={`https://img.vietqr.io/image/${bankSettings.bankCode}-${bankSettings.accountNumber}-compact2.png?amount=${Math.round(finalTotal)}&addInfo=${encodeURIComponent(`THEMEVN ${formData.phone || 'DH' + Date.now()}`)}&accountName=${encodeURIComponent(bankSettings.accountName)}`}
+                                  alt="VietQR Payment"
+                                  className="w-40 h-40 object-contain"
+                                />
+                              </div>
+                              <p className="text-xs text-muted-foreground text-center mt-2">
+                                Quét bằng app ngân hàng
+                              </p>
+                            </div>
+                            
+                            {/* Bank Info */}
+                            <div className="flex-1 space-y-3">
+                              <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                  <span className="text-muted-foreground">Ngân hàng:</span>
+                                  <p className="font-medium text-foreground">{bankSettings.bankName}</p>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Số tiền:</span>
+                                  <p className="font-bold text-primary">{formatPrice(finalTotal)}</p>
+                                </div>
+                                <div className="col-span-2">
+                                  <span className="text-muted-foreground">Số tài khoản:</span>
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium text-foreground font-mono">{bankSettings.accountNumber}</p>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(bankSettings.accountNumber);
+                                        setCopied(true);
+                                        setTimeout(() => setCopied(false), 2000);
+                                        toast({ title: "Đã sao chép số tài khoản" });
+                                      }}
+                                      className="p-1 hover:bg-primary/10 rounded transition-colors"
+                                    >
+                                      {copied ? <CheckCircle className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="col-span-2">
+                                  <span className="text-muted-foreground">Chủ tài khoản:</span>
+                                  <p className="font-medium text-foreground">{bankSettings.accountName}</p>
+                                </div>
+                                <div className="col-span-2">
+                                  <span className="text-muted-foreground">Nội dung CK:</span>
+                                  <p className="font-medium text-foreground bg-primary/10 px-2 py-1 rounded inline-block">
+                                    THEMEVN {formData.phone || "[Nhập SĐT]"}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Số tài khoản:</span>
-                            <p className="font-medium text-foreground">1234567890</p>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Ngân hàng:</span>
+                              <p className="font-medium text-foreground">Vietcombank</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Số tài khoản:</span>
+                              <p className="font-medium text-foreground">1234567890</p>
+                            </div>
+                            <div className="col-span-2">
+                              <span className="text-muted-foreground">Chủ tài khoản:</span>
+                              <p className="font-medium text-foreground">CONG TY TNHH THEME VN</p>
+                            </div>
+                            <div className="col-span-2">
+                              <span className="text-muted-foreground">Nội dung CK:</span>
+                              <p className="font-medium text-foreground">THEMEVN {formData.phone || "[Số điện thoại]"}</p>
+                            </div>
                           </div>
-                          <div className="col-span-2">
-                            <span className="text-muted-foreground">Chủ tài khoản:</span>
-                            <p className="font-medium text-foreground">CONG TY TNHH THEME VN</p>
-                          </div>
-                          <div className="col-span-2">
-                            <span className="text-muted-foreground">Nội dung CK:</span>
-                            <p className="font-medium text-foreground">THEMEVN {formData.phone || "[Số điện thoại]"}</p>
-                          </div>
-                        </div>
+                        )}
                       </div>
                     )}
 
