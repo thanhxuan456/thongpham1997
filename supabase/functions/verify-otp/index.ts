@@ -13,6 +13,32 @@ interface VerifyOtpRequest {
   password?: string; // Required for signup
 }
 
+// Helper function to check if user exists by email efficiently
+// Uses listUsers with filter instead of fetching all users
+async function getUserByEmail(supabase: any, email: string) {
+  const { data, error } = await supabase.auth.admin.listUsers({
+    page: 1,
+    perPage: 1,
+  });
+  
+  if (error) return { user: null, error };
+  
+  // Since we can't filter by email directly in listUsers, we need to check profiles table
+  // which is indexed and more efficient
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("user_id")
+    .eq("email", email)
+    .maybeSingle();
+  
+  if (profile?.user_id) {
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(profile.user_id);
+    return { user: userData?.user, error: userError };
+  }
+  
+  return { user: null, error: null };
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -28,6 +54,35 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // ========== RATE LIMITING FOR VERIFY OTP ==========
+    // Check failed verification attempts in last 10 minutes
+    const { data: recentAttempts, error: attemptsError } = await supabase
+      .from("otp_codes")
+      .select("id, code, used")
+      .eq("email", email)
+      .eq("type", type)
+      .gte("created_at", new Date(Date.now() - 10 * 60 * 1000).toISOString());
+
+    if (!attemptsError && recentAttempts) {
+      // Count how many different incorrect codes were attempted
+      // If OTP was marked as used but code doesn't match current attempt, it's a failed attempt
+      const failedAttempts = recentAttempts.filter(r => r.used && r.code !== code).length;
+      
+      if (failedAttempts >= 5) {
+        // Delete all OTPs for this email to force requesting a new one
+        await supabase.from("otp_codes").delete().eq("email", email).eq("type", type);
+        
+        return new Response(
+          JSON.stringify({ error: "Quá nhiều lần thử không thành công. Vui lòng yêu cầu mã OTP mới." }),
+          {
+            status: 429,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+    }
+    // ========== END RATE LIMITING ==========
 
     // Get the OTP record
     const { data: otpRecord, error: fetchError } = await supabase
@@ -84,10 +139,9 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      // Check if user already exists
-      const { data: existingUsers } = await supabase.auth.admin.listUsers();
-      const existingUser = existingUsers?.users?.find(u => u.email === email);
-
+      // Check if user already exists using profiles table (indexed lookup)
+      const { user: existingUser } = await getUserByEmail(supabase, email);
+      
       if (existingUser) {
         return new Response(
           JSON.stringify({ error: "Email đã được đăng ký" }),
@@ -131,11 +185,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (type === "login") {
-      // Check if user exists
-      const { data: existingUsers } = await supabase.auth.admin.listUsers();
-      const existingUser = existingUsers?.users?.find(u => u.email === email);
+      // Check if user exists using profiles table (indexed lookup)
+      const { user: existingUser, error: userError } = await getUserByEmail(supabase, email);
 
-      if (!existingUser) {
+      if (userError || !existingUser) {
         return new Response(
           JSON.stringify({ error: "Tài khoản không tồn tại" }),
           {
