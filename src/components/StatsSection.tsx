@@ -10,9 +10,9 @@ const StatsSection = () => {
   ];
 
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden -mt-1">
       {/* Top Wave */}
-      <div className="absolute top-0 left-0 w-full overflow-hidden leading-none rotate-180">
+      <div className="w-full overflow-hidden leading-none rotate-180 bg-gradient-to-r from-primary via-[hsl(var(--primary)/0.9)] to-accent">
         <svg
           className="relative block w-full h-[60px] md:h-[80px]"
           viewBox="0 0 1200 120"
@@ -26,7 +26,7 @@ const StatsSection = () => {
       </div>
 
       {/* Main Content */}
-      <div className="bg-gradient-to-r from-primary via-[hsl(var(--primary)/0.9)] to-accent py-24 md:py-32">
+      <div className="bg-gradient-to-r from-primary via-[hsl(var(--primary)/0.9)] to-accent py-16 md:py-24 relative">
         {/* Animated Background Elements - Container/Ship Theme */}
         <div className="absolute inset-0 overflow-hidden">
           {/* Shipping containers floating */}
@@ -130,7 +130,7 @@ const StatsSection = () => {
       </div>
 
       {/* Bottom Wave */}
-      <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none">
+      <div className="w-full overflow-hidden leading-none bg-gradient-to-r from-primary via-[hsl(var(--primary)/0.9)] to-accent">
         <svg
           className="relative block w-full h-[60px] md:h-[80px]"
           viewBox="0 0 1200 120"
