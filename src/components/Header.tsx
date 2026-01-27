@@ -1,4 +1,5 @@
-import { ShoppingCart, Search, Menu, X, Sun, Moon, Home, Info, HeadphonesIcon, Newspaper, User, LogOut, Shield, Download } from "lucide-react";
+import { ShoppingCart, Search, Menu, X, Home, Info, HeadphonesIcon, Newspaper, User, LogOut, Shield, Download } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -181,30 +182,7 @@ const Header = ({ onCartClick, onSearch, searchQuery = "" }: HeaderProps) => {
             </div>
 
             {/* Dark Mode Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="relative overflow-hidden rounded-xl"
-              aria-label="Toggle theme"
-            >
-              <div className="relative w-5 h-5">
-                <Sun 
-                  className={`h-5 w-5 absolute inset-0 transition-all duration-300 ${
-                    theme === "dark" 
-                      ? "rotate-90 scale-0 opacity-0" 
-                      : "rotate-0 scale-100 opacity-100"
-                  }`} 
-                />
-                <Moon 
-                  className={`h-5 w-5 absolute inset-0 transition-all duration-300 ${
-                    theme === "dark" 
-                      ? "rotate-0 scale-100 opacity-100" 
-                      : "-rotate-90 scale-0 opacity-0"
-                  }`} 
-                />
-              </div>
-            </Button>
+            <ThemeToggle />
             
             {/* Cart */}
             <Button 
