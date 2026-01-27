@@ -1,11 +1,11 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Sun, Moon, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeContext";
+import { memo } from "react";
 
-const AuthHeader = () => {
+const AuthHeader = memo(() => {
   const { theme, toggleTheme } = useTheme();
-  const location = useLocation();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-transparent">
@@ -61,6 +61,8 @@ const AuthHeader = () => {
       </div>
     </header>
   );
-};
+});
+
+AuthHeader.displayName = "AuthHeader";
 
 export default AuthHeader;

@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
+import { memo } from "react";
 
-const AuthFooter = () => {
+const AuthFooter = memo(() => {
   return (
     <footer className="fixed bottom-0 left-0 right-0 z-50 bg-transparent">
       <div className="container mx-auto px-4 py-4">
@@ -21,6 +22,8 @@ const AuthFooter = () => {
       </div>
     </footer>
   );
-};
+});
+
+AuthFooter.displayName = "AuthFooter";
 
 export default AuthFooter;

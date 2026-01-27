@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,21 @@ import { Mail, Lock, ArrowLeft, Loader2, Sparkles, Shield, Zap } from "lucide-re
 import authBgVideo from "@/assets/auth-background.mp4";
 import AuthHeader from "@/components/AuthHeader";
 import AuthFooter from "@/components/AuthFooter";
+
+// Move AuthCard outside the component to prevent re-creation on every render
+const AuthCard = memo(({ children }: { children: React.ReactNode }) => (
+  <Card className="border-border/30 bg-card/80 backdrop-blur-xl shadow-2xl">
+    {children}
+  </Card>
+));
+AuthCard.displayName = "AuthCard";
+
+// Memoized features array
+const features = [
+  { icon: Sparkles, text: "Thiết kế chuyên nghiệp" },
+  { icon: Zap, text: "Tốc độ tải nhanh" },
+  { icon: Shield, text: "Bảo mật cao" },
+];
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -155,18 +170,6 @@ const Auth = () => {
       setShowForgotPassword(false);
     }
   };
-
-  const features = [
-    { icon: Sparkles, text: "Thiết kế chuyên nghiệp" },
-    { icon: Zap, text: "Tốc độ tải nhanh" },
-    { icon: Shield, text: "Bảo mật cao" },
-  ];
-
-  const AuthCard = ({ children }: { children: React.ReactNode }) => (
-    <Card className="border-border/30 bg-card/80 backdrop-blur-xl shadow-2xl">
-      {children}
-    </Card>
-  );
 
   if (showForgotPassword) {
     return (
