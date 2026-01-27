@@ -17,13 +17,22 @@ import {
   CheckCircle,
   AlertCircle,
   Eye,
-  FileDown
+  FileDown,
+  ShoppingBag,
+  CreditCard,
+  TrendingUp,
+  Calendar,
+  Star,
+  Heart,
+  Edit
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -61,12 +70,19 @@ interface Order {
   payment_method: string | null;
 }
 
+interface UserProfile {
+  full_name: string | null;
+  avatar_url: string | null;
+  email: string | null;
+}
+
 const Profile = () => {
   const navigate = useNavigate();
   const { user, signOut, loading: authLoading } = useAuth();
   const [downloads, setDownloads] = useState<UserDownload[]>([]);
   const [sessions, setSessions] = useState<UserSession[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -83,8 +99,7 @@ const Profile = () => {
   const fetchUserData = async () => {
     setLoading(true);
     
-    // Fetch downloads, sessions, and orders in parallel
-    const [downloadsRes, sessionsRes, ordersRes] = await Promise.all([
+    const [downloadsRes, sessionsRes, ordersRes, profileRes] = await Promise.all([
       supabase
         .from("user_downloads")
         .select("*")
@@ -99,12 +114,18 @@ const Profile = () => {
         .from("orders")
         .select("*")
         .eq("user_id", user!.id)
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("profiles")
+        .select("full_name, avatar_url, email")
+        .eq("user_id", user!.id)
+        .maybeSingle()
     ]);
 
     if (downloadsRes.data) setDownloads(downloadsRes.data);
     if (sessionsRes.data) setSessions(sessionsRes.data);
     if (ordersRes.data) setOrders(ordersRes.data);
+    if (profileRes.data) setProfile(profileRes.data);
     
     setLoading(false);
   };
@@ -119,13 +140,11 @@ const Profile = () => {
       return;
     }
 
-    // Increment download count
     await supabase
       .from("user_downloads")
       .update({ download_count: download.download_count + 1 })
       .eq("id", download.id);
 
-    // Simulate download
     if (download.download_url) {
       window.open(download.download_url, "_blank");
     } else {
@@ -135,7 +154,6 @@ const Profile = () => {
       });
     }
 
-    // Refresh data
     fetchUserData();
   };
 
@@ -225,15 +243,20 @@ const Profile = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
-        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Hoàn tất</Badge>;
+        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Hoàn tất</Badge>;
       case "pending":
-        return <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Chờ xử lý</Badge>;
+        return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">Chờ xử lý</Badge>;
       case "cancelled":
-        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Đã hủy</Badge>;
+        return <Badge className="bg-red-500/10 text-red-600 border-red-500/20">Đã hủy</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
+
+  // Calculate stats
+  const totalSpent = orders.filter(o => o.status === 'completed').reduce((sum, o) => sum + o.total_amount, 0);
+  const completedOrders = orders.filter(o => o.status === 'completed').length;
+  const totalDownloads = downloads.reduce((sum, d) => sum + d.download_count, 0);
 
   if (authLoading || loading) {
     return (
@@ -248,32 +271,120 @@ const Profile = () => {
       <Header />
       
       <main className="container mx-auto px-4 py-8 pt-24">
+        {/* Profile Header */}
         <AnimatedSection animation="fade-up">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Tài khoản của tôi</h1>
-              <p className="text-muted-foreground mt-1">{user?.email}</p>
-            </div>
-            <Button variant="outline" onClick={() => signOut()}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Đăng xuất
-            </Button>
+          <Card className="mb-8 overflow-hidden">
+            <div className="h-32 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20" />
+            <CardContent className="relative pt-0">
+              <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-16">
+                <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
+                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarFallback className="text-3xl bg-primary text-primary-foreground">
+                    {profile?.full_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 pb-4">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <h1 className="text-2xl font-bold text-foreground">
+                        {profile?.full_name || 'Người dùng'}
+                      </h1>
+                      <p className="text-muted-foreground">{user?.email}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="outline" className="gap-1">
+                          <Calendar className="h-3 w-3" />
+                          Tham gia {formatDate(user?.created_at || new Date().toISOString()).split(' ')[0]}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Edit className="h-4 w-4" />
+                        Chỉnh sửa
+                      </Button>
+                      <Button variant="destructive" size="sm" onClick={() => signOut()} className="gap-2">
+                        <LogOut className="h-4 w-4" />
+                        Đăng xuất
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </AnimatedSection>
+
+        {/* Stats Cards */}
+        <AnimatedSection animation="fade-up" delay={100}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <Card className="border-border/50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <ShoppingBag className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground">{completedOrders}</p>
+                    <p className="text-xs text-muted-foreground">Đơn hoàn tất</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-border/50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                    <CreditCard className="h-5 w-5 text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-foreground">{formatPrice(totalSpent)}</p>
+                    <p className="text-xs text-muted-foreground">Tổng chi tiêu</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-border/50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                    <Download className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground">{totalDownloads}</p>
+                    <p className="text-xs text-muted-foreground">Lượt tải</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-border/50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <Package className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-foreground">{downloads.length}</p>
+                    <p className="text-xs text-muted-foreground">Themes sở hữu</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </AnimatedSection>
 
         <Tabs defaultValue="downloads" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+          <TabsList className="grid w-full grid-cols-3 lg:w-[500px]">
             <TabsTrigger value="downloads" className="gap-2">
               <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Tải xuống</span>
+              Themes của tôi
             </TabsTrigger>
             <TabsTrigger value="orders" className="gap-2">
               <Package className="h-4 w-4" />
-              <span className="hidden sm:inline">Đơn hàng</span>
+              Đơn hàng
             </TabsTrigger>
             <TabsTrigger value="security" className="gap-2">
               <Shield className="h-4 w-4" />
-              <span className="hidden sm:inline">Bảo mật</span>
+              Bảo mật
             </TabsTrigger>
           </TabsList>
 
@@ -325,6 +436,10 @@ const Profile = () => {
                                   {formatDate(download.created_at)}
                                 </span>
                               </div>
+                              <Progress 
+                                value={(download.download_count / download.max_downloads) * 100} 
+                                className="h-1 mt-2 w-32"
+                              />
                             </div>
                           </div>
                           <Button 
@@ -386,7 +501,7 @@ const Profile = () => {
                               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                                 <span>{formatDate(order.created_at)}</span>
                                 <span>•</span>
-                                <span>{formatPrice(order.total_amount)}</span>
+                                <span className="font-medium text-foreground">{formatPrice(order.total_amount)}</span>
                               </div>
                             </div>
                           </div>
@@ -405,7 +520,7 @@ const Profile = () => {
             </AnimatedSection>
           </TabsContent>
 
-          {/* Security Tab - Session Management */}
+          {/* Security Tab */}
           <TabsContent value="security" className="space-y-4">
             <AnimatedSection animation="fade-up">
               <Card>
@@ -463,7 +578,7 @@ const Profile = () => {
                                   {getDeviceName(session.user_agent)}
                                 </h4>
                                 {session.is_current && (
-                                  <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                                  <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
                                     Phiên hiện tại
                                   </Badge>
                                 )}

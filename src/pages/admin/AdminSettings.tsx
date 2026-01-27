@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import AdminLayout from "@/components/admin/AdminLayout";
+import SiteAssetsUpload from "@/components/admin/SiteAssetsUpload";
+import ThemeAppearanceSettings from "@/components/admin/ThemeAppearanceSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Settings, 
@@ -37,7 +39,8 @@ import {
   Loader2,
   QrCode,
   Phone,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Upload
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
@@ -216,10 +219,14 @@ const AdminSettings = () => {
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-8 h-auto gap-2 bg-muted/50 p-2">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-9 h-auto gap-2 bg-muted/50 p-2">
             <TabsTrigger value="general" className="gap-2 data-[state=active]:bg-background">
               <Settings className="h-4 w-4" />
               <span className="hidden sm:inline">Chung</span>
+            </TabsTrigger>
+            <TabsTrigger value="appearance" className="gap-2 data-[state=active]:bg-background">
+              <Palette className="h-4 w-4" />
+              <span className="hidden sm:inline">Giao diện</span>
             </TabsTrigger>
             <TabsTrigger value="api" className="gap-2 data-[state=active]:bg-background">
               <Key className="h-4 w-4" />
@@ -446,6 +453,50 @@ const AdminSettings = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Appearance Settings */}
+          <TabsContent value="appearance" className="space-y-6">
+            {/* Site Assets */}
+            <Card className="border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="h-5 w-5 text-primary" />
+                  Tài nguyên Website
+                </CardTitle>
+                <CardDescription>
+                  Quản lý favicon, logo và ảnh đại diện cho website
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <SiteAssetsUpload
+                    type="favicon"
+                    currentUrl={formValues['SITE_FAVICON_URL']}
+                    onUploadComplete={(url) => updateFormValue('SITE_FAVICON_URL', url)}
+                    onDelete={() => updateFormValue('SITE_FAVICON_URL', '')}
+                  />
+                  <SiteAssetsUpload
+                    type="logo"
+                    currentUrl={formValues['SITE_LOGO_URL']}
+                    onUploadComplete={(url) => updateFormValue('SITE_LOGO_URL', url)}
+                    onDelete={() => updateFormValue('SITE_LOGO_URL', '')}
+                  />
+                  <SiteAssetsUpload
+                    type="og-image"
+                    currentUrl={formValues['SITE_OG_IMAGE_URL']}
+                    onUploadComplete={(url) => updateFormValue('SITE_OG_IMAGE_URL', url)}
+                    onDelete={() => updateFormValue('SITE_OG_IMAGE_URL', '')}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Theme Appearance */}
+            <ThemeAppearanceSettings 
+              values={formValues}
+              onUpdate={updateFormValue}
+            />
           </TabsContent>
 
           {/* API Keys Settings */}
