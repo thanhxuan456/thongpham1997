@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          ip_address: string | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          ip_address?: string | null
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           created_at: string
@@ -760,9 +796,26 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      affiliate_commission_summary: {
+        Row: {
+          affiliate_user_id: string | null
+          first_referral_at: string | null
+          last_referral_at: string | null
+          paid_commission: number | null
+          paid_count: number | null
+          pending_commission: number | null
+          pending_count: number | null
+          total_commission: number | null
+          total_referrals: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      can_submit_rating: {
+        Args: { p_ip_address: string; p_user_id?: string }
+        Returns: boolean
+      }
       cleanup_expired_otps: { Args: never; Returns: undefined }
       has_role: {
         Args: {
