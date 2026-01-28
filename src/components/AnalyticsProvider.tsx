@@ -7,9 +7,47 @@ interface AnalyticsSettings {
   gtmId: string | null;
 }
 
+// Analytics ID validation patterns
+const ANALYTICS_PATTERNS = {
+  GA_ID: /^G-[A-Z0-9]{10,12}$/, // Google Analytics 4: G-XXXXXXXXXX
+  FB_PIXEL: /^[0-9]{15,16}$/, // Facebook Pixel: 15-16 digits
+  GTM_ID: /^GTM-[A-Z0-9]{6,8}$/, // Google Tag Manager: GTM-XXXXXX
+};
+
+/**
+ * Validates analytics IDs to prevent script injection attacks
+ */
+function isValidAnalyticsId(id: string | null, type: 'GA' | 'FB' | 'GTM'): boolean {
+  if (!id || typeof id !== 'string') return false;
+  
+  const trimmedId = id.trim();
+  
+  switch (type) {
+    case 'GA':
+      return ANALYTICS_PATTERNS.GA_ID.test(trimmedId);
+    case 'FB':
+      return ANALYTICS_PATTERNS.FB_PIXEL.test(trimmedId);
+    case 'GTM':
+      return ANALYTICS_PATTERNS.GTM_ID.test(trimmedId);
+    default:
+      return false;
+  }
+}
+
+/**
+ * Sanitizes analytics ID by removing any potentially dangerous characters
+ */
+function sanitizeAnalyticsId(id: string): string {
+  // Only allow alphanumeric characters and hyphens
+  return id.replace(/[^a-zA-Z0-9-]/g, '');
+}
+
 /**
  * AnalyticsProvider - Tự động inject Google Analytics, Facebook Pixel và GTM
  * khi admin cấu hình ID trong Settings
+ * 
+ * Security: All analytics IDs are validated against strict patterns
+ * to prevent script injection attacks
  */
 const AnalyticsProvider = () => {
   const [settings, setSettings] = useState<AnalyticsSettings>({
@@ -48,15 +86,23 @@ const AnalyticsProvider = () => {
 
     const gaId = settings.googleAnalyticsId;
     
+    // Validate format to prevent script injection
+    if (!isValidAnalyticsId(gaId, 'GA')) {
+      console.error('Invalid Google Analytics ID format:', gaId);
+      return;
+    }
+
+    const sanitizedGaId = sanitizeAnalyticsId(gaId);
+    
     // Check if already loaded
-    if (document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${gaId}"]`)) {
+    if (document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${sanitizedGaId}"]`)) {
       return;
     }
 
     // Load gtag.js
     const script = document.createElement("script");
     script.async = true;
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(sanitizedGaId)}`;
     document.head.appendChild(script);
 
     // Initialize gtag
@@ -65,14 +111,14 @@ const AnalyticsProvider = () => {
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', '${gaId}', {
+      gtag('config', '${sanitizedGaId}', {
         page_title: document.title,
         page_location: window.location.href
       });
     `;
     document.head.appendChild(inlineScript);
 
-    console.log("✅ Google Analytics loaded:", gaId);
+    console.log("✅ Google Analytics loaded:", sanitizedGaId);
 
     return () => {
       script.remove();
@@ -85,6 +131,14 @@ const AnalyticsProvider = () => {
     if (!settings.facebookPixelId) return;
 
     const pixelId = settings.facebookPixelId;
+    
+    // Validate format to prevent script injection
+    if (!isValidAnalyticsId(pixelId, 'FB')) {
+      console.error('Invalid Facebook Pixel ID format:', pixelId);
+      return;
+    }
+
+    const sanitizedPixelId = sanitizeAnalyticsId(pixelId);
     
     // Check if already loaded
     if ((window as any).fbq) {
@@ -102,17 +156,17 @@ const AnalyticsProvider = () => {
       t.src=v;s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)}(window, document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '${pixelId}');
+      fbq('init', '${sanitizedPixelId}');
       fbq('track', 'PageView');
     `;
     document.head.appendChild(script);
 
     // Add noscript fallback
     const noscript = document.createElement("noscript");
-    noscript.innerHTML = `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"/>`;
+    noscript.innerHTML = `<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=${encodeURIComponent(sanitizedPixelId)}&ev=PageView&noscript=1"/>`;
     document.body.appendChild(noscript);
 
-    console.log("✅ Facebook Pixel loaded:", pixelId);
+    console.log("✅ Facebook Pixel loaded:", sanitizedPixelId);
 
     return () => {
       script.remove();
@@ -126,8 +180,16 @@ const AnalyticsProvider = () => {
 
     const gtmId = settings.gtmId;
     
+    // Validate format to prevent script injection
+    if (!isValidAnalyticsId(gtmId, 'GTM')) {
+      console.error('Invalid GTM ID format:', gtmId);
+      return;
+    }
+
+    const sanitizedGtmId = sanitizeAnalyticsId(gtmId);
+    
     // Check if already loaded
-    if (document.querySelector(`script[src*="googletagmanager.com/gtm.js?id=${gtmId}"]`)) {
+    if (document.querySelector(`script[src*="googletagmanager.com/gtm.js?id=${sanitizedGtmId}"]`)) {
       return;
     }
 
@@ -138,14 +200,14 @@ const AnalyticsProvider = () => {
       new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
       j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
       'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-      })(window,document,'script','dataLayer','${gtmId}');
+      })(window,document,'script','dataLayer','${sanitizedGtmId}');
     `;
     document.head.appendChild(script);
 
     // GTM noscript iframe
     const noscript = document.createElement("noscript");
     const iframe = document.createElement("iframe");
-    iframe.src = `https://www.googletagmanager.com/ns.html?id=${gtmId}`;
+    iframe.src = `https://www.googletagmanager.com/ns.html?id=${encodeURIComponent(sanitizedGtmId)}`;
     iframe.height = "0";
     iframe.width = "0";
     iframe.style.display = "none";
@@ -153,7 +215,7 @@ const AnalyticsProvider = () => {
     noscript.appendChild(iframe);
     document.body.insertBefore(noscript, document.body.firstChild);
 
-    console.log("✅ Google Tag Manager loaded:", gtmId);
+    console.log("✅ Google Tag Manager loaded:", sanitizedGtmId);
 
     return () => {
       script.remove();
