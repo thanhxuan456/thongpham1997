@@ -144,24 +144,74 @@ const AdminSettings = () => {
   const handleSaveSettings = async () => {
     setSaving(true);
     
-    // Update each changed setting
+    let hasError = false;
+    let successCount = 0;
+    
+    // Update or insert each changed setting
     const updates = Object.entries(formValues).map(async ([key, value]) => {
       const original = settings.find(s => s.key === key);
-      if (original && original.value !== value) {
-        return supabase
-          .from("settings")
-          .update({ value })
-          .eq("key", key);
+      
+      // Only process if value changed or is new
+      if (!original || original.value !== value) {
+        try {
+          if (original) {
+            // Update existing setting
+            const { error } = await supabase
+              .from("settings")
+              .update({ value, updated_at: new Date().toISOString() })
+              .eq("key", key);
+            
+            if (error) {
+              console.error(`Error updating setting ${key}:`, error);
+              hasError = true;
+            } else {
+              successCount++;
+            }
+          } else {
+            // Insert new setting
+            const { error } = await supabase
+              .from("settings")
+              .insert({ 
+                key, 
+                value,
+                description: `Auto-created setting: ${key}`,
+                is_secret: key.includes('KEY') || key.includes('SECRET') || key.includes('PASSWORD')
+              });
+            
+            if (error) {
+              console.error(`Error inserting setting ${key}:`, error);
+              hasError = true;
+            } else {
+              successCount++;
+            }
+          }
+        } catch (err) {
+          console.error(`Exception saving setting ${key}:`, err);
+          hasError = true;
+        }
       }
       return Promise.resolve();
     });
 
     await Promise.all(updates);
     
-    toast({
-      title: "Đã lưu cài đặt",
-      description: "Các thay đổi đã được lưu thành công",
-    });
+    if (hasError) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi lưu cài đặt",
+        description: "Một số cài đặt không thể lưu. Vui lòng thử lại.",
+      });
+    } else if (successCount > 0) {
+      toast({
+        title: "Đã lưu cài đặt",
+        description: `${successCount} cài đặt đã được lưu thành công`,
+      });
+    } else {
+      toast({
+        title: "Không có thay đổi",
+        description: "Không có cài đặt nào cần cập nhật",
+      });
+    }
     
     await fetchSettings();
     setSaving(false);
