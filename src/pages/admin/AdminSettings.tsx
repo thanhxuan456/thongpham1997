@@ -146,25 +146,32 @@ const AdminSettings = () => {
     
     let hasError = false;
     let successCount = 0;
+    const errorDetails: string[] = [];
     
     // Update or insert each changed setting
-    const updates = Object.entries(formValues).map(async ([key, value]) => {
+    for (const [key, value] of Object.entries(formValues)) {
       const original = settings.find(s => s.key === key);
       
-      // Only process if value changed or is new
-      if (!original || original.value !== value) {
+      // Normalize values for comparison (treat null, undefined, and empty string as equivalent)
+      const originalValue = original?.value ?? '';
+      const newValue = value ?? '';
+      
+      // Only process if value actually changed
+      if (originalValue !== newValue) {
         try {
           if (original) {
             // Update existing setting
             const { error } = await supabase
               .from("settings")
-              .update({ value, updated_at: new Date().toISOString() })
+              .update({ value: newValue, updated_at: new Date().toISOString() })
               .eq("key", key);
             
             if (error) {
               console.error(`Error updating setting ${key}:`, error);
+              errorDetails.push(`${key}: ${error.message}`);
               hasError = true;
             } else {
+              console.log(`Successfully updated setting: ${key}`);
               successCount++;
             }
           } else {
@@ -173,33 +180,35 @@ const AdminSettings = () => {
               .from("settings")
               .insert({ 
                 key, 
-                value,
+                value: newValue,
                 description: `Auto-created setting: ${key}`,
                 is_secret: key.includes('KEY') || key.includes('SECRET') || key.includes('PASSWORD')
               });
             
             if (error) {
               console.error(`Error inserting setting ${key}:`, error);
+              errorDetails.push(`${key}: ${error.message}`);
               hasError = true;
             } else {
+              console.log(`Successfully inserted new setting: ${key}`);
               successCount++;
             }
           }
         } catch (err) {
           console.error(`Exception saving setting ${key}:`, err);
+          errorDetails.push(`${key}: Exception occurred`);
           hasError = true;
         }
       }
-      return Promise.resolve();
-    });
-
-    await Promise.all(updates);
+    }
     
     if (hasError) {
       toast({
         variant: "destructive",
         title: "Lỗi lưu cài đặt",
-        description: "Một số cài đặt không thể lưu. Vui lòng thử lại.",
+        description: errorDetails.length > 0 
+          ? `Lỗi: ${errorDetails.slice(0, 2).join(', ')}` 
+          : "Một số cài đặt không thể lưu. Vui lòng thử lại.",
       });
     } else if (successCount > 0) {
       toast({
