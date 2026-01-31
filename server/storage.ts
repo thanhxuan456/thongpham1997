@@ -1,17 +1,21 @@
-import { db } from "./db";
-import { eq, desc, and, gte, lt, sql } from "drizzle-orm";
-import {
+import { db, schema } from "./db";
+import { eq, desc, and, gte, sql } from "drizzle-orm";
+import bcrypt from "bcrypt";
+
+const {
   users, themes, orders, orderItems, coupons, settings,
   menuItems, emailTemplates, subscribers, supportTickets,
   ticketMessages, chatRatings, userDownloads, affiliateReferrals, otpCodes,
-  type User, type InsertUser, type Theme, type InsertTheme,
-  type Order, type InsertOrder, type OrderItem, type InsertOrderItem,
-  type Coupon, type InsertCoupon, type Setting, type InsertSetting,
-  type MenuItem, type InsertMenuItem, type EmailTemplate, type InsertEmailTemplate,
-  type Subscriber, type InsertSubscriber, type SupportTicket, type InsertSupportTicket,
-  type TicketMessage, type InsertTicketMessage, type ChatRating, type InsertChatRating,
+} = schema;
+
+import type {
+  User, InsertUser, Theme, InsertTheme,
+  Order, InsertOrder, OrderItem, InsertOrderItem,
+  Coupon, InsertCoupon, Setting, InsertSetting,
+  MenuItem, InsertMenuItem, EmailTemplate, InsertEmailTemplate,
+  Subscriber, InsertSubscriber, SupportTicket, InsertSupportTicket,
+  TicketMessage, InsertTicketMessage, ChatRating, InsertChatRating,
 } from "../shared/schema";
-import bcrypt from "bcrypt";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
