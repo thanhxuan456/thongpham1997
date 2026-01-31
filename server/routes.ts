@@ -108,6 +108,34 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
       
       const isPhone = phone && !email;
+      
+      // Check user existence based on type
+      const existingUser = isPhone 
+        ? await storage.getUserByPhone(phone) 
+        : await storage.getUserByEmail(email);
+      
+      if (type === "login" || type === "recovery") {
+        // For login/recovery, user must already be registered
+        if (!existingUser) {
+          return res.status(400).json({ 
+            error: isPhone 
+              ? "Số điện thoại chưa được đăng ký" 
+              : "Email chưa được đăng ký",
+            errorCode: "USER_NOT_FOUND"
+          });
+        }
+      } else if (type === "signup") {
+        // For signup, user must NOT exist
+        if (existingUser) {
+          return res.status(400).json({ 
+            error: isPhone 
+              ? "Số điện thoại đã được đăng ký" 
+              : "Email đã được đăng ký",
+            errorCode: "USER_EXISTS"
+          });
+        }
+      }
+      
       const otp = generateOtp();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
       await storage.createOtp(target, otp, type || "login", expiresAt);
