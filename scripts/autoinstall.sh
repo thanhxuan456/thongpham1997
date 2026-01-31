@@ -342,9 +342,14 @@ DOMAIN=$DOMAIN
 JWT_SECRET=$(openssl rand -hex 32)
 SESSION_SECRET=$(openssl rand -hex 32)
 
-# Email Configuration (Update with your Resend API key)
-RESEND_API_KEY=your_resend_api_key_here
-FROM_EMAIL=noreply@${DOMAIN:-localhost}
+# SMTP Email Configuration (Update with your email provider settings)
+# Common providers: Gmail, SendGrid, Mailgun, Amazon SES, or your own mail server
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_password_here
+SMTP_FROM_NAME=ThemeVN
+SMTP_FROM_EMAIL=noreply@${DOMAIN:-localhost}
 
 # Storage Configuration
 UPLOAD_DIR=$INSTALL_DIR/uploads
@@ -503,7 +508,7 @@ echo -e "  Database: $DB_NAME"
 echo -e "  User:     $DB_USER"
 echo ""
 echo -e "${YELLOW}Next Steps:${NC}"
-echo "1. Update .env file with your Resend API key for emails"
+echo "1. Update .env file with your SMTP settings for emails (Gmail, SendGrid, etc.)"
 echo "2. Create an admin user via the registration page"
 echo "3. Access the admin panel at $APP_URL/admin"
 echo ""

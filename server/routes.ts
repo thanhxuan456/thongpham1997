@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import session from "express-session";
+import { sendOtpEmail, isEmailConfigured } from "./email";
 
 declare module "express-session" {
   interface SessionData {
@@ -120,12 +121,15 @@ export async function registerRoutes(app: Express): Promise<void> {
           note: "SMS integration required - OTP logged to console for testing"
         });
       } else {
-        console.log(`[Email OTP] Email: ${email}, Code: ${otp}`);
+        const emailSent = await sendOtpEmail(email, otp, type || "login");
+        if (!emailSent) {
+          console.log(`[Email OTP] Email: ${email}, Code: ${otp}`);
+        }
         res.json({ 
           success: true, 
-          message: "OTP sent via Email",
+          message: emailSent ? "OTP sent via Email" : "OTP generated (check console)",
           method: "email",
-          note: "Email integration required - OTP logged to console for testing"
+          configured: isEmailConfigured()
         });
       }
     } catch (error) {
