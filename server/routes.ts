@@ -99,15 +99,35 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   app.post("/api/auth/send-otp", async (req: Request, res: Response) => {
     try {
-      const { email, type } = req.body;
-      if (!email) {
-        return res.status(400).json({ error: "Email is required" });
+      const { email, phone, type } = req.body;
+      const target = email || phone;
+      
+      if (!target) {
+        return res.status(400).json({ error: "Email or phone is required" });
       }
+      
+      const isPhone = phone && !email;
       const otp = generateOtp();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-      await storage.createOtp(email, otp, type || "login", expiresAt);
-      console.log(`OTP for ${email}: ${otp}`);
-      res.json({ success: true, message: "OTP sent successfully" });
+      await storage.createOtp(target, otp, type || "login", expiresAt);
+      
+      if (isPhone) {
+        console.log(`[SMS OTP] Phone: ${phone}, Code: ${otp}`);
+        res.json({ 
+          success: true, 
+          message: "OTP sent via SMS", 
+          method: "phone",
+          note: "SMS integration required - OTP logged to console for testing"
+        });
+      } else {
+        console.log(`[Email OTP] Email: ${email}, Code: ${otp}`);
+        res.json({ 
+          success: true, 
+          message: "OTP sent via Email",
+          method: "email",
+          note: "Email integration required - OTP logged to console for testing"
+        });
+      }
     } catch (error) {
       res.status(500).json({ error: "Failed to send OTP" });
     }
@@ -115,32 +135,36 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   app.post("/api/auth/verify-otp", async (req: Request, res: Response) => {
     try {
-      const { email, code, type, password } = req.body;
-      if (!email || !code) {
-        return res.status(400).json({ error: "Email and code are required" });
+      const { email, phone, code, type, password } = req.body;
+      const target = email || phone;
+      
+      if (!target || !code) {
+        return res.status(400).json({ error: "Email/phone and code are required" });
       }
-      const isValid = await storage.verifyOtp(email, code, type || "login");
+      
+      const isValid = await storage.verifyOtp(target, code, type || "login");
       if (!isValid) {
         return res.status(400).json({ error: "Invalid or expired OTP" });
       }
-      await storage.markOtpAsUsed(email, code);
+      await storage.markOtpAsUsed(target, code);
 
       if (type === "signup") {
         if (!password) {
           return res.status(400).json({ error: "Password is required for signup" });
         }
-        const existingUser = await storage.getUserByEmail(email);
+        const existingUser = email ? await storage.getUserByEmail(email) : await storage.getUserByPhone(phone);
         if (existingUser) {
-          return res.status(400).json({ error: "Email already registered" });
+          return res.status(400).json({ error: "Account already registered" });
         }
-        const user = await storage.createUser({ email, password });
+        const userData = email ? { email, password } : { email: `${phone}@phone.local`, password, phone };
+        const user = await storage.createUser(userData);
         req.session.userId = user.id;
         req.session.isAdmin = user.role === "admin";
         return res.json({ success: true, verified: true, user_created: true });
       }
 
       if (type === "login") {
-        const user = await storage.getUserByEmail(email);
+        const user = email ? await storage.getUserByEmail(email) : await storage.getUserByPhone(phone);
         if (!user) {
           return res.status(400).json({ error: "User not found" });
         }

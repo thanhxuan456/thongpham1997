@@ -103,12 +103,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const sendOtpViaResend = async (email: string, type: "login" | "signup" | "recovery") => {
+  const sendOtpViaResend = async (target: string, type: "login" | "signup" | "recovery") => {
     try {
+      const isPhone = target.startsWith("+") || /^\d{10,}$/.test(target);
+      const payload = isPhone ? { phone: target, type } : { email: target, type };
+      
       const response = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, type }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -123,17 +126,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const verifyOtpViaResend = async (
-    email: string,
+    target: string,
     code: string,
     type: "login" | "signup" | "recovery",
     password?: string
   ) => {
     try {
+      const isPhone = target.startsWith("+") || /^\d{10,}$/.test(target);
+      const payload = isPhone 
+        ? { phone: target, code, type, password }
+        : { email: target, code, type, password };
+      
       const response = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, code, type, password }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
