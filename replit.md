@@ -4,6 +4,9 @@
 ThemeVN is a Vietnamese WordPress theme marketplace platform that allows users to browse, purchase, and download premium WordPress themes. The platform includes features like user authentication with OTP, admin dashboard, order management, coupon system, support tickets, email templates, and affiliate program functionality.
 
 ## Recent Changes
+- **2026-01-31**: Added SMTP email service with Nodemailer for VPS deployment
+- **2026-01-31**: Added phone number OTP support with country code selector
+- **2026-01-31**: Created comprehensive development guide (`docs/DEVELOPMENT_GUIDE.md`)
 - **2026-01-31**: Added MySQL database support for standalone deployment outside of Replit
 - **2026-01-31**: Migrated from Supabase to self-hosted authentication with Express session
 - **2026-01-31**: Created autoinstall.sh script for easy VPS deployment
