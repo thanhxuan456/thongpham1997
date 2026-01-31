@@ -5,7 +5,7 @@ interface LoadingScreenProps {
   minDuration?: number;
 }
 
-const LoadingScreen = ({ onLoadingComplete, minDuration = 2000 }: LoadingScreenProps) => {
+const LoadingScreen = ({ onLoadingComplete, minDuration = 1500 }: LoadingScreenProps) => {
   const [progress, setProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isHiding, setIsHiding] = useState(false);
@@ -13,6 +13,7 @@ const LoadingScreen = ({ onLoadingComplete, minDuration = 2000 }: LoadingScreenP
   useEffect(() => {
     const startTime = Date.now();
     const duration = minDuration;
+    let animationId: number;
 
     const updateProgress = () => {
       const elapsed = Date.now() - startTime;
@@ -20,19 +21,31 @@ const LoadingScreen = ({ onLoadingComplete, minDuration = 2000 }: LoadingScreenP
       setProgress(newProgress);
 
       if (newProgress < 100) {
-        requestAnimationFrame(updateProgress);
+        animationId = requestAnimationFrame(updateProgress);
       } else {
         setIsComplete(true);
         setTimeout(() => {
           setIsHiding(true);
           setTimeout(() => {
             onLoadingComplete?.();
-          }, 500);
-        }, 300);
+          }, 300);
+        }, 200);
       }
     };
 
-    requestAnimationFrame(updateProgress);
+    animationId = requestAnimationFrame(updateProgress);
+
+    const timeout = setTimeout(() => {
+      cancelAnimationFrame(animationId);
+      setIsComplete(true);
+      setIsHiding(true);
+      onLoadingComplete?.();
+    }, minDuration + 1000);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      clearTimeout(timeout);
+    };
   }, [minDuration, onLoadingComplete]);
 
   if (isHiding) {
