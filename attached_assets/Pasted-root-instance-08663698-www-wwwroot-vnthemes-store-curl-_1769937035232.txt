@@ -1,0 +1,109 @@
+root@instance-08663698:/www/wwwroot/vnthemes.store# curl http://localhost:5000/api/install/status
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+root@instance-08663698:/www/wwwroot/vnthemes.store# root@instance-08663698:/www/wwwroot/vnthemes.store# curl http://localhost:5000/api/install/status
+curl: (7) Failed to connect to localhost port 5000 after 0 ms: Couldn't connect to server
+-bash: root@instance-08663698:/www/wwwroot/vnthemes.store#: No such file or directory
+-bash: syntax error near unexpected token `7'
+root@instance-08663698:/www/wwwroot/vnthemes.store# # Check the service logs
+sudo journalctl -u themevn -n 50 --no-pager
+Feb 01 16:08:25 instance-08663698 systemd[1]: themevn.service: Consumed 1.434s CPU time.
+Feb 01 16:08:25 instance-08663698 systemd[1]: themevn.service: Scheduled restart job, restart counter is at 3.
+Feb 01 16:08:25 instance-08663698 systemd[1]: Started themevn.service - ThemeVN CMS.
+Feb 01 16:08:26 instance-08663698 node[23929]: The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+Feb 01 16:08:26 instance-08663698 node[23929]: node:internal/url:1477
+Feb 01 16:08:26 instance-08663698 node[23929]:     throw new ERR_INVALID_ARG_TYPE('path', ['string', 'URL'], path);
+Feb 01 16:08:26 instance-08663698 node[23929]:     ^
+Feb 01 16:08:26 instance-08663698 node[23929]: TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string or an instance of URL. Received undefined
+Feb 01 16:08:26 instance-08663698 node[23929]:     at new NodeError (node:internal/errors:405:5)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at fileURLToPath (node:internal/url:1477:11)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at Object.<anonymous> (/www/wwwroot/vnthemes.store/dist/index.cjs:1795:47)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at Module._compile (node:internal/modules/cjs/loader:1356:14)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at Module._extensions..js (node:internal/modules/cjs/loader:1414:10)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at Module.load (node:internal/modules/cjs/loader:1197:32)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at Module._load (node:internal/modules/cjs/loader:1013:12)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:128:12)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at node:internal/main/run_main_module:28:49 {
+Feb 01 16:08:26 instance-08663698 node[23929]:   code: 'ERR_INVALID_ARG_TYPE'
+Feb 01 16:08:26 instance-08663698 node[23929]: }
+Feb 01 16:08:26 instance-08663698 node[23929]: Node.js v18.19.1
+Feb 01 16:08:26 instance-08663698 systemd[1]: themevn.service: Main process exited, code=exited, status=1/FAILURE
+Feb 01 16:08:26 instance-08663698 systemd[1]: themevn.service: Failed with result 'exit-code'.
+Feb 01 16:08:26 instance-08663698 systemd[1]: themevn.service: Consumed 1.429s CPU time, 41.9M memory peak, 0B memory swap peak.
+Feb 01 16:08:26 instance-08663698 systemd[1]: themevn.service: Scheduled restart job, restart counter is at 4.
+Feb 01 16:08:26 instance-08663698 systemd[1]: Started themevn.service - ThemeVN CMS.
+Feb 01 16:08:28 instance-08663698 node[24013]: The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+Feb 01 16:08:28 instance-08663698 node[24013]: node:internal/url:1477
+Feb 01 16:08:28 instance-08663698 node[24013]:     throw new ERR_INVALID_ARG_TYPE('path', ['string', 'URL'], path);
+Feb 01 16:08:28 instance-08663698 node[24013]:     ^
+Feb 01 16:08:28 instance-08663698 node[24013]: TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string or an instance of URL. Received undefined
+Feb 01 16:08:28 instance-08663698 node[24013]:     at new NodeError (node:internal/errors:405:5)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at fileURLToPath (node:internal/url:1477:11)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at Object.<anonymous> (/www/wwwroot/vnthemes.store/dist/index.cjs:1795:47)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at Module._compile (node:internal/modules/cjs/loader:1356:14)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at Module._extensions..js (node:internal/modules/cjs/loader:1414:10)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at Module.load (node:internal/modules/cjs/loader:1197:32)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at Module._load (node:internal/modules/cjs/loader:1013:12)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:128:12)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at node:internal/main/run_main_module:28:49 {
+Feb 01 16:08:28 instance-08663698 node[24013]:   code: 'ERR_INVALID_ARG_TYPE'
+Feb 01 16:08:28 instance-08663698 node[24013]: }
+Feb 01 16:08:28 instance-08663698 node[24013]: Node.js v18.19.1
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Main process exited, code=exited, status=1/FAILURE
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Failed with result 'exit-code'.
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Consumed 1.507s CPU time.
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Scheduled restart job, restart counter is at 5.
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Start request repeated too quickly.
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Failed with result 'exit-code'.
+Feb 01 16:08:28 instance-08663698 systemd[1]: Failed to start themevn.service - ThemeVN CMS.
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Consumed 1.507s CPU time.
+root@instance-08663698:/www/wwwroot/vnthemes.store# sudo journalctl -u themevn -n 50 --no-pager
+Feb 01 16:08:25 instance-08663698 systemd[1]: themevn.service: Consumed 1.434s CPU time.
+Feb 01 16:08:25 instance-08663698 systemd[1]: themevn.service: Scheduled restart job, restart counter is at 3.
+Feb 01 16:08:25 instance-08663698 systemd[1]: Started themevn.service - ThemeVN CMS.
+Feb 01 16:08:26 instance-08663698 node[23929]: The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+Feb 01 16:08:26 instance-08663698 node[23929]: node:internal/url:1477
+Feb 01 16:08:26 instance-08663698 node[23929]:     throw new ERR_INVALID_ARG_TYPE('path', ['string', 'URL'], path);
+Feb 01 16:08:26 instance-08663698 node[23929]:     ^
+Feb 01 16:08:26 instance-08663698 node[23929]: TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string or an instance of URL. Received undefined
+Feb 01 16:08:26 instance-08663698 node[23929]:     at new NodeError (node:internal/errors:405:5)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at fileURLToPath (node:internal/url:1477:11)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at Object.<anonymous> (/www/wwwroot/vnthemes.store/dist/index.cjs:1795:47)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at Module._compile (node:internal/modules/cjs/loader:1356:14)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at Module._extensions..js (node:internal/modules/cjs/loader:1414:10)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at Module.load (node:internal/modules/cjs/loader:1197:32)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at Module._load (node:internal/modules/cjs/loader:1013:12)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:128:12)
+Feb 01 16:08:26 instance-08663698 node[23929]:     at node:internal/main/run_main_module:28:49 {
+Feb 01 16:08:26 instance-08663698 node[23929]:   code: 'ERR_INVALID_ARG_TYPE'
+Feb 01 16:08:26 instance-08663698 node[23929]: }
+Feb 01 16:08:26 instance-08663698 node[23929]: Node.js v18.19.1
+Feb 01 16:08:26 instance-08663698 systemd[1]: themevn.service: Main process exited, code=exited, status=1/FAILURE
+Feb 01 16:08:26 instance-08663698 systemd[1]: themevn.service: Failed with result 'exit-code'.
+Feb 01 16:08:26 instance-08663698 systemd[1]: themevn.service: Consumed 1.429s CPU time, 41.9M memory peak, 0B memory swap peak.
+Feb 01 16:08:26 instance-08663698 systemd[1]: themevn.service: Scheduled restart job, restart counter is at 4.
+Feb 01 16:08:26 instance-08663698 systemd[1]: Started themevn.service - ThemeVN CMS.
+Feb 01 16:08:28 instance-08663698 node[24013]: The CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.
+Feb 01 16:08:28 instance-08663698 node[24013]: node:internal/url:1477
+Feb 01 16:08:28 instance-08663698 node[24013]:     throw new ERR_INVALID_ARG_TYPE('path', ['string', 'URL'], path);
+Feb 01 16:08:28 instance-08663698 node[24013]:     ^
+Feb 01 16:08:28 instance-08663698 node[24013]: TypeError [ERR_INVALID_ARG_TYPE]: The "path" argument must be of type string or an instance of URL. Received undefined
+Feb 01 16:08:28 instance-08663698 node[24013]:     at new NodeError (node:internal/errors:405:5)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at fileURLToPath (node:internal/url:1477:11)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at Object.<anonymous> (/www/wwwroot/vnthemes.store/dist/index.cjs:1795:47)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at Module._compile (node:internal/modules/cjs/loader:1356:14)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at Module._extensions..js (node:internal/modules/cjs/loader:1414:10)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at Module.load (node:internal/modules/cjs/loader:1197:32)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at Module._load (node:internal/modules/cjs/loader:1013:12)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:128:12)
+Feb 01 16:08:28 instance-08663698 node[24013]:     at node:internal/main/run_main_module:28:49 {
+Feb 01 16:08:28 instance-08663698 node[24013]:   code: 'ERR_INVALID_ARG_TYPE'
+Feb 01 16:08:28 instance-08663698 node[24013]: }
+Feb 01 16:08:28 instance-08663698 node[24013]: Node.js v18.19.1
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Main process exited, code=exited, status=1/FAILURE
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Failed with result 'exit-code'.
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Consumed 1.507s CPU time.
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Scheduled restart job, restart counter is at 5.
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Start request repeated too quickly.
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Failed with result 'exit-code'.
+Feb 01 16:08:28 instance-08663698 systemd[1]: Failed to start themevn.service - ThemeVN CMS.
+Feb 01 16:08:28 instance-08663698 systemd[1]: themevn.service: Consumed 1.507s CPU time.
