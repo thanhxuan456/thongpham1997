@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ThemeVN Auto Install & Update Script
-# Fully automated deployment for VPS with Neon PostgreSQL
+# Fully automated deployment for fresh VPS with Neon PostgreSQL
 
 set -e
 
@@ -21,39 +21,46 @@ echo ""
 DATABASE_URL="postgresql://neondb_owner:npg_ThBvz2Doj5qC@ep-twilight-water-ah1dwzer-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require"
 SESSION_SECRET=$(openssl rand -hex 32)
 DB_TYPE="postgresql"
+DOMAIN="vnthemes.store"
 
-# Detect installation directory
-if [ -d "/www/wwwroot/vnthemes.store" ]; then
-    APP_DIR="/www/wwwroot/vnthemes.store"
-elif [ -d "/var/www/themevn" ]; then
-    APP_DIR="/var/www/themevn"
-elif [ -d "$(pwd)/server" ]; then
-    APP_DIR="$(pwd)"
-else
-    echo -e "${YELLOW}Enter your ThemeVN installation directory:${NC}"
-    read -p "> " APP_DIR
-fi
+# Detect or set installation directory
+APP_DIR="/var/www/themevn"
 
-if [ ! -d "$APP_DIR" ]; then
-    echo -e "${RED}Error: Directory $APP_DIR does not exist${NC}"
-    exit 1
-fi
-
-cd "$APP_DIR"
-echo -e "${GREEN}Working in: $APP_DIR${NC}"
+echo -e "${BLUE}Installation directory: $APP_DIR${NC}"
 echo ""
 
-# Step 1: Install Node.js if not installed
-echo -e "${BLUE}[1/9] Checking Node.js...${NC}"
+# Step 1: Update system and install dependencies
+echo -e "${BLUE}[1/10] Updating system and installing dependencies...${NC}"
+apt-get update
+apt-get install -y curl git nginx openssl
+echo -e "${GREEN}System dependencies installed${NC}"
+
+# Step 2: Install Node.js 20.x
+echo -e "${BLUE}[2/10] Installing Node.js 20.x...${NC}"
 if ! command -v node &> /dev/null; then
-    echo -e "${YELLOW}Installing Node.js 20.x...${NC}"
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
     apt-get install -y nodejs
 fi
 echo -e "${GREEN}Node.js $(node -v) installed${NC}"
 
-# Step 2: Create .env file
-echo -e "${BLUE}[2/9] Creating environment configuration...${NC}"
+# Step 3: Create app directory and clone/copy files
+echo -e "${BLUE}[3/10] Setting up application directory...${NC}"
+mkdir -p "$APP_DIR"
+
+if [ -d "$(pwd)/server" ] && [ "$(pwd)" != "$APP_DIR" ]; then
+    echo -e "${YELLOW}Copying files from current directory...${NC}"
+    cp -r . "$APP_DIR/"
+elif [ ! -f "$APP_DIR/package.json" ]; then
+    echo -e "${YELLOW}Please copy your ThemeVN files to $APP_DIR${NC}"
+    echo -e "${YELLOW}Or run this script from the ThemeVN directory${NC}"
+    exit 1
+fi
+
+cd "$APP_DIR"
+echo -e "${GREEN}Working in: $APP_DIR${NC}"
+
+# Step 4: Create .env file
+echo -e "${BLUE}[4/10] Creating environment configuration...${NC}"
 cat > .env << EOF
 # Database Configuration (Neon PostgreSQL)
 DB_TYPE=${DB_TYPE}
@@ -65,7 +72,7 @@ SESSION_SECRET=${SESSION_SECRET}
 # Node Environment
 NODE_ENV=production
 
-# SMTP (configure later via web installer)
+# SMTP (configure via web installer)
 # SMTP_HOST=smtp.gmail.com
 # SMTP_PORT=587
 # SMTP_USER=your-email@gmail.com
@@ -73,8 +80,8 @@ NODE_ENV=production
 EOF
 echo -e "${GREEN}Created .env file${NC}"
 
-# Step 3: Fix server/vite.ts for production
-echo -e "${BLUE}[3/9] Fixing production server configuration...${NC}"
+# Step 5: Fix server/vite.ts for production
+echo -e "${BLUE}[5/10] Fixing production server configuration...${NC}"
 cat > server/vite.ts << 'EOF'
 import express, { type Express } from "express";
 import fs from "fs";
@@ -139,18 +146,18 @@ export function serveStatic(app: Express) {
 EOF
 echo -e "${GREEN}Fixed server/vite.ts${NC}"
 
-# Step 4: Install dependencies
-echo -e "${BLUE}[4/9] Installing dependencies...${NC}"
+# Step 6: Install dependencies
+echo -e "${BLUE}[6/10] Installing npm dependencies...${NC}"
 npm install --legacy-peer-deps
 echo -e "${GREEN}Dependencies installed${NC}"
 
-# Step 5: Build the application
-echo -e "${BLUE}[5/9] Building application...${NC}"
+# Step 7: Build the application
+echo -e "${BLUE}[7/10] Building application...${NC}"
 npm run build
 echo -e "${GREEN}Build complete${NC}"
 
-# Step 6: Push database schema (create tables)
-echo -e "${BLUE}[6/9] Creating database tables...${NC}"
+# Step 8: Push database schema (create tables)
+echo -e "${BLUE}[8/10] Creating database tables...${NC}"
 export DATABASE_URL="${DATABASE_URL}"
 export DB_TYPE="${DB_TYPE}"
 npm run db:push || {
@@ -159,8 +166,8 @@ npm run db:push || {
 }
 echo -e "${GREEN}Database tables ready${NC}"
 
-# Step 7: Setup systemd service
-echo -e "${BLUE}[7/9] Setting up systemd service...${NC}"
+# Step 9: Setup systemd service
+echo -e "${BLUE}[9/10] Setting up systemd service...${NC}"
 cat > /etc/systemd/system/themevn.service << EOF
 [Unit]
 Description=ThemeVN CMS
@@ -184,28 +191,20 @@ EOF
 
 systemctl daemon-reload
 systemctl enable themevn
-echo -e "${GREEN}Systemd service configured${NC}"
+systemctl restart themevn
+echo -e "${GREEN}Systemd service configured and started${NC}"
 
-# Step 8: Configure web server (BT Panel / Nginx)
-echo -e "${BLUE}[8/9] Configuring web server...${NC}"
+# Step 10: Configure Nginx
+echo -e "${BLUE}[10/10] Configuring Nginx...${NC}"
 
-# Check for BT Panel
-if [ -d "/www/server/panel/vhost/nginx" ]; then
-    echo -e "${YELLOW}Detected BT Panel - configuring nginx...${NC}"
-    
-    # Get domain from directory name or ask
-    DOMAIN=$(basename "$APP_DIR")
-    if [ "$DOMAIN" == "themevn" ]; then
-        DOMAIN="vnthemes.store"
-    fi
-    
-    cat > /www/server/panel/vhost/nginx/${DOMAIN}.conf << EOF
+# Remove default nginx config
+rm -f /etc/nginx/sites-enabled/default
+
+# Create site config
+cat > /etc/nginx/sites-available/${DOMAIN} << EOF
 server {
     listen 80;
     server_name ${DOMAIN} www.${DOMAIN};
-    
-    access_log /www/wwwlogs/${DOMAIN}.log;
-    error_log /www/wwwlogs/${DOMAIN}.error.log;
 
     location / {
         proxy_pass http://127.0.0.1:5000;
@@ -221,95 +220,30 @@ server {
     }
 }
 EOF
-    
-    # Restart nginx
-    if [ -f "/etc/init.d/nginx" ]; then
-        /etc/init.d/nginx reload
-    elif command -v nginx &> /dev/null; then
-        nginx -s reload
-    fi
-    echo -e "${GREEN}BT Panel nginx configured for ${DOMAIN}${NC}"
 
-# Check for standard Nginx
-elif [ -d "/etc/nginx/sites-available" ]; then
-    echo -e "${YELLOW}Configuring standard nginx...${NC}"
-    DOMAIN="vnthemes.store"
-    
-    cat > /etc/nginx/sites-available/${DOMAIN} << EOF
-server {
-    listen 80;
-    server_name ${DOMAIN} www.${DOMAIN};
+# Enable site
+ln -sf /etc/nginx/sites-available/${DOMAIN} /etc/nginx/sites-enabled/
 
-    location / {
-        proxy_pass http://127.0.0.1:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_cache_bypass \$http_upgrade;
-    }
-}
-EOF
-    
-    ln -sf /etc/nginx/sites-available/${DOMAIN} /etc/nginx/sites-enabled/
-    nginx -t && systemctl reload nginx
-    echo -e "${GREEN}Nginx configured for ${DOMAIN}${NC}"
+# Test and reload nginx
+nginx -t && systemctl reload nginx
+systemctl enable nginx
+echo -e "${GREEN}Nginx configured for ${DOMAIN}${NC}"
 
-elif [ -d "/etc/nginx/conf.d" ]; then
-    echo -e "${YELLOW}Configuring nginx conf.d...${NC}"
-    DOMAIN="vnthemes.store"
-    
-    cat > /etc/nginx/conf.d/${DOMAIN}.conf << EOF
-server {
-    listen 80;
-    server_name ${DOMAIN} www.${DOMAIN};
-
-    location / {
-        proxy_pass http://127.0.0.1:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_cache_bypass \$http_upgrade;
-    }
-}
-EOF
-    
-    nginx -t && systemctl reload nginx
-    echo -e "${GREEN}Nginx configured for ${DOMAIN}${NC}"
-else
-    echo -e "${YELLOW}No nginx detected. App will run on port 5000.${NC}"
-    echo -e "${YELLOW}Configure your web server to proxy to http://127.0.0.1:5000${NC}"
-fi
-
-# Step 9: Start service and verify
-echo -e "${BLUE}[9/9] Starting ThemeVN service...${NC}"
-systemctl restart themevn
+# Verify everything is running
+echo ""
+echo -e "${BLUE}Verifying installation...${NC}"
 sleep 3
 
-# Check status
-if systemctl is-active --quiet themevn; then
-    echo -e "${GREEN}ThemeVN is running!${NC}"
-else
-    echo -e "${RED}Service failed to start. Logs:${NC}"
-    journalctl -u themevn -n 20 --no-pager
-    exit 1
-fi
+# Check services
+echo -e "ThemeVN service: $(systemctl is-active themevn)"
+echo -e "Nginx service: $(systemctl is-active nginx)"
 
 # Test API
-echo ""
-echo -e "${BLUE}Testing API...${NC}"
-sleep 2
 RESPONSE=$(curl -s http://localhost:5000/api/install/status 2>/dev/null || echo "failed")
 if [[ "$RESPONSE" == *"installed"* ]] || [[ "$RESPONSE" == *"hasDatabase"* ]]; then
-    echo -e "${GREEN}API is responding!${NC}"
-    echo "Response: $RESPONSE"
+    echo -e "${GREEN}API is responding correctly!${NC}"
 else
-    echo -e "${YELLOW}API test inconclusive. Check logs if issues.${NC}"
+    echo -e "${YELLOW}API response: $RESPONSE${NC}"
 fi
 
 echo ""
@@ -317,20 +251,24 @@ echo -e "${BLUE}========================================${NC}"
 echo -e "${GREEN}   Installation Complete!${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
-echo -e "${GREEN}Database:${NC} Neon PostgreSQL (tables created)"
+echo -e "${GREEN}Database:${NC} Neon PostgreSQL (connected)"
 echo -e "${GREEN}Service:${NC} themevn.service (running)"
-echo -e "${GREEN}Port:${NC} 5000"
+echo -e "${GREEN}Nginx:${NC} Configured for ${DOMAIN}"
+echo -e "${GREEN}Port:${NC} 5000 (internal) → 80 (public)"
 echo ""
-echo -e "Next step: Open your browser and go to:"
-echo -e "  ${YELLOW}http://vnthemes.store/setup${NC}"
+echo -e "Open your browser:"
+echo -e "  ${YELLOW}http://${DOMAIN}/setup${NC}"
 echo ""
-echo -e "The web installer will help you:"
-echo -e "  1. Verify database connection"
-echo -e "  2. Create admin account"
-echo -e "  3. Configure site settings"
+echo -e "Or if DNS not configured yet:"
+echo -e "  ${YELLOW}http://YOUR_SERVER_IP/setup${NC}"
 echo ""
 echo -e "Useful commands:"
-echo -e "  ${YELLOW}systemctl status themevn${NC}  - Check status"
-echo -e "  ${YELLOW}journalctl -u themevn -f${NC}  - View logs"
-echo -e "  ${YELLOW}systemctl restart themevn${NC} - Restart"
+echo -e "  ${YELLOW}systemctl status themevn${NC}  - Check app status"
+echo -e "  ${YELLOW}journalctl -u themevn -f${NC}  - View app logs"
+echo -e "  ${YELLOW}systemctl restart themevn${NC} - Restart app"
+echo -e "  ${YELLOW}systemctl status nginx${NC}    - Check nginx status"
+echo ""
+echo -e "${BLUE}Optional: Install SSL certificate${NC}"
+echo -e "  apt install certbot python3-certbot-nginx -y"
+echo -e "  certbot --nginx -d ${DOMAIN} -d www.${DOMAIN}"
 echo ""
