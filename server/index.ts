@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { registerRoutes } from "./routes";
+import { registerInstallerRoutes } from "./installer";
 import { setupVite, serveStatic, log } from "./vite";
 import MemoryStore from "memorystore";
 
@@ -57,6 +58,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  registerInstallerRoutes(app);
   await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

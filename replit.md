@@ -4,6 +4,9 @@
 ThemeVN is a Vietnamese WordPress theme marketplace platform that allows users to browse, purchase, and download premium WordPress themes. The platform includes features like user authentication with OTP, admin dashboard, order management, coupon system, support tickets, email templates, and affiliate program functionality.
 
 ## Recent Changes
+- **2026-02-01**: Added WordPress-style web installer at `/setup` for easy CMS installation
+- **2026-02-01**: Improved OTP validation (login requires registered users, signup requires new users)
+- **2026-02-01**: Enhanced autoinstall.sh with PostgreSQL support and admin user creation
 - **2026-01-31**: Added SMTP email service with Nodemailer for VPS deployment
 - **2026-01-31**: Added phone number OTP support with country code selector
 - **2026-01-31**: Created comprehensive development guide (`docs/DEVELOPMENT_GUIDE.md`)
@@ -52,6 +55,23 @@ Set the following environment variables:
 DB_TYPE=mysql
 DATABASE_URL=mysql://username:password@localhost:3306/themevn
 ```
+
+## Web Installer
+
+ThemeVN includes a WordPress-style web installer at `/setup` that allows you to:
+
+1. **Configure Database**: Test connection or create new database (MySQL/PostgreSQL)
+2. **Create Admin**: Set up the first administrator account
+3. **Configure Site**: Set site name, URL, and SMTP settings
+4. **Complete Installation**: Mark installation as complete
+
+### Installer API Endpoints
+- `GET /api/install/status` - Check installation status
+- `POST /api/install/test-database` - Test database connection
+- `POST /api/install/create-database` - Create database with root credentials
+- `POST /api/install/create-admin` - Create admin user
+- `POST /api/install/configure-site` - Save site configuration
+- `POST /api/install/complete` - Mark installation complete
 
 ## Deployment
 
