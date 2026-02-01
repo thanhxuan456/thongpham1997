@@ -319,9 +319,25 @@ export function registerInstallerRoutes(app: Express): void {
     try {
       markAsInstalled();
       
+      const filesToDelete = [
+        path.join(process.cwd(), "server", "installer.ts"),
+        path.join(process.cwd(), "src", "pages", "Setup.tsx")
+      ];
+      
+      for (const filePath of filesToDelete) {
+        try {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`Deleted installer file: ${filePath}`);
+          }
+        } catch (deleteError) {
+          console.warn(`Could not delete ${filePath}:`, deleteError);
+        }
+      }
+      
       res.json({ 
         success: true, 
-        message: "Cài đặt hoàn tất! Chào mừng đến với ThemeVN." 
+        message: "Cài đặt hoàn tất! File cài đặt đã được xóa tự động." 
       });
     } catch (error: any) {
       console.error("Complete installation error:", error);

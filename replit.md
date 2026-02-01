@@ -63,7 +63,12 @@ ThemeVN includes a WordPress-style web installer at `/setup` that allows you to:
 1. **Configure Database**: Test connection or create new database (MySQL/PostgreSQL)
 2. **Create Admin**: Set up the first administrator account
 3. **Configure Site**: Set site name, URL, and SMTP settings
-4. **Complete Installation**: Mark installation as complete
+4. **Complete Installation**: Auto-deletes installer files for security
+
+**Security Features:**
+- Input sanitization to prevent SQL injection
+- Installer files (`server/installer.ts`, `src/pages/Setup.tsx`) are automatically deleted after successful installation
+- Installation lock file (`.installed`) prevents re-running
 
 ### Installer API Endpoints
 - `GET /api/install/status` - Check installation status
